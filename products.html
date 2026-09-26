@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JoyVet Drug Shop — Products</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,36 +21,50 @@
       <nav class="nav-list">
         <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
         <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
-        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders</a>
-        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+        <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
         <a class="nav-link active" href="products.html"><span class="nav-icon">💊</span>Products</a>
         <a class="nav-link" href="customer-portal.html"><span class="nav-icon">👥</span>Customers</a>
+        <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+        <a class="nav-link" href="attendence.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
+        <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
       </nav>
+      <div class="sidebar-footer">
+        <div class="owner-chip">
+          <div class="owner-avatar">YJ</div>
+          <div>
+            <div class="owner-name">Yiga Josephat</div>
+            <div class="owner-role">Owner</div>
+          </div>
+        </div>
+      </div>
     </aside>
+
     <main class="main">
       <header class="topbar">
         <div>
           <h1 class="topbar-title">Products</h1>
-          <p class="topbar-sub">Product catalogue summary</p>
+          <p class="topbar-sub">Current stock levels and pricing</p>
         </div>
       </header>
+
+      <section class="stat-grid" id="productStats"></section>
+
       <section class="panel">
         <div class="panel-head">
-          <h2>Stock List</h2>
+          <h2>Inventory</h2>
         </div>
         <table class="data-table">
           <thead>
-            <tr><th>Product</th><th>Category</th><th>Stock</th><th>Price</th></tr>
+            <tr><th>Product</th><th>Category</th><th>Stock</th><th>Price</th><th>Expiry</th><th>Status</th></tr>
           </thead>
-          <tbody>
-            <tr><td>Amoxicillin Inj. 100ml</td><td>Medicine</td><td>6</td><td>UGX 35,000</td></tr>
-            <tr><td>ECF Vaccine (Muguga)</td><td>Vaccine</td><td>3</td><td>UGX 18,000</td></tr>
-            <tr><td>Broiler Starter Feed 70kg</td><td>Feed</td><td>22</td><td>UGX 125,000</td></tr>
-            <tr><td>Mineral Lick Supplement</td><td>Supplement</td><td>40</td><td>UGX 45,000</td></tr>
-          </tbody>
+          <tbody id="productsTableBody"></tbody>
         </table>
       </section>
     </main>
   </div>
+
+  <script src="products.js"></script>
 </body>
 </html>
