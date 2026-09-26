@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JoyVet Drug Shop — Staff Sign-In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="attendance-body">
+
+<div class="login-wrap" id="loginView">
+  <div class="login-card">
+    <div class="login-logo">🐾</div>
+    <h1 class="login-title">JoyVet Drug Shop</h1>
+    <p class="login-sub">Sign in to start your shift</p>
+
+    <div class="form-group">
+      <label for="staffSelect">Your name</label>
+      <select id="staffSelect">
+        <option value="">-- Select your name --</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="pinInput">PIN</label>
+      <input id="pinInput" type="password" maxlength="4" placeholder="4-digit PIN" inputmode="numeric">
+    </div>
+
+    <button class="btn-primary full-width" onclick="signIn()">Sign In &amp; Clock In</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+
+<div class="attendance-shell hidden" id="attendanceView">
+  <header class="attendance-topbar">
+    <div>
+      <div class="active-worker-name" id="activeWorkerName"></div>
+      <div class="active-worker-meta" id="activeWorkerMeta"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-ghost" onclick="signOut()">Sign Out</button>
+      <button class="btn-danger" onclick="clockOut()">Clock Out</button>
+    </div>
+  </header>
+
+  <section class="stat-grid" id="attendanceStats"></section>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Today's Attendance — <span id="todayLabel"></span></h2>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Worker</th><th>Role</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th></tr>
+      </thead>
+      <tbody id="attendanceBody"></tbody>
+    </table>
+  </div>
+
+  <p class="switch-user" onclick="switchUser()">← Sign in as someone else</p>
+</div>
+
+<script src="attendence.js"></script>
+</body>
+</html>

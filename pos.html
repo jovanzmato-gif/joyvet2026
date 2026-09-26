@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JoyVet Drug Shop — POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">🐾</div>
+      <div><div class="brand-name">JoyVet</div><div class="brand-sub">Drug Shop</div></div>
+    </div>
+    <nav class="nav-list">
+      <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
+      <a class="nav-link active" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
+      <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+      <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
+      <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+      <a class="nav-link" href="customer-portal.html"><span class="nav-icon">👥</span>Customers</a>
+      <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+      <a class="nav-link" href="attendence.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
+      <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+      <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="owner-chip">
+        <div class="owner-avatar">YJ</div>
+        <div><div class="owner-name">Yiga Josephat</div><div class="owner-role">Owner</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="topbar-title">Point of Sale</h1>
+        <p class="topbar-sub">Cashier on duty:
+          <select id="cashierSelect" class="cashier-select"></select>
+        </p>
+      </div>
+      <div class="topbar-actions">
+        <span class="pos-clock" id="posClock"></span>
+      </div>
+    </header>
+
+    <div class="pos-layout">
+      <section class="pos-products">
+        <input type="text" id="productSearch" class="pos-search" placeholder="Search product by name..." oninput="renderProductGrid()">
+        <div class="product-grid" id="productGrid"></div>
+      </section>
+
+      <aside class="pos-cart">
+        <div class="panel">
+          <div class="panel-head"><h2>Cart</h2><span class="panel-link" onclick="clearCart()">Clear</span></div>
+          <div id="cartItems"></div>
+          <div class="cart-total-row"><span>Total</span><span id="cartTotal">UGX 0</span></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head"><h2>Payment Method</h2></div>
+          <div class="payment-methods" id="paymentMethods">
+            <button class="method-btn active" data-method="cash" onclick="selectPaymentMethod('cash')">💵 Cash</button>
+            <button class="method-btn" data-method="mtn" onclick="selectPaymentMethod('mtn')">📱 MTN MoMo</button>
+            <button class="method-btn" data-method="airtel" onclick="selectPaymentMethod('airtel')">📱 Airtel Money</button>
+            <button class="method-btn" data-method="credit" onclick="selectPaymentMethod('credit')">📒 On Account</button>
+          </div>
+          <div id="paymentFields"></div>
+          <button class="btn-primary full-width" onclick="completeSale()">Complete Sale</button>
+          <p class="pos-error" id="posError"></p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<div class="receipt-overlay hidden" id="receiptOverlay">
+  <div class="receipt-card">
+    <div class="receipt-head">
+      <div class="login-logo">🐾</div>
+      <h2>JoyVet Drug Shop</h2>
+      <p>Receipt</p>
+    </div>
+    <div id="receiptBody"></div>
+    <button class="btn-primary full-width" onclick="closeReceipt()">New Sale</button>
+  </div>
+</div>
+
+<script src="pos.js"></script>
+</body>
+</html>
