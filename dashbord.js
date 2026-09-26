@@ -14,7 +14,9 @@ const recentSales = [
   {product:"Mineral Lick Supplement", customer:"Ssebunya Dairy", qty:3, amount:135000, time:"11:20 AM"},
 ];
 
-function formatUGX(n){ return "UGX " + n.toLocaleString(); }
+function formatUGX(n){
+  return "UGX " + Number(n || 0).toLocaleString();
+}
 
 function daysUntil(dateStr){
   const today = new Date();
@@ -23,16 +25,21 @@ function daysUntil(dateStr){
 }
 
 function getTodaysSalesTotal(){
-  return recentSales.reduce((sum, sale) => sum + sale.amount, 0);
+  return recentSales.reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
 }
+
 function getLowStockItems(){
-  return products.filter(p => p.stock < p.lowStockThreshold);
+  return products.filter(p => Number(p.stock || 0) < Number(p.lowStockThreshold || 0));
 }
+
 function getExpiringSoonItems(daysWindow = 30){
   return products.filter(p => daysUntil(p.expiryDate) <= daysWindow);
 }
 
 function renderStatCards(){
+  const statGrid = document.getElementById('statGrid');
+  if (!statGrid) return;
+
   const lowStock = getLowStockItems();
   const expiring = getExpiringSoonItems();
   const cards = [
@@ -41,7 +48,8 @@ function renderStatCards(){
     {icon:"⚠️", label:"Low Stock Items", num: lowStock.length, cls:"alert"},
     {icon:"⏳", label:"Expiring Soon", num: expiring.length, cls:"amber"},
   ];
-  document.getElementById('statGrid').innerHTML = cards.map(c => `
+
+  statGrid.innerHTML = cards.map(c => `
     <div class="stat-card ${c.cls}">
       <div class="icon">${c.icon}</div>
       <div class="num">${c.num}</div>
@@ -51,7 +59,10 @@ function renderStatCards(){
 }
 
 function renderRecentSales(){
-  document.getElementById('recentSalesBody').innerHTML = recentSales.map(s => `
+  const recentSalesBody = document.getElementById('recentSalesBody');
+  if (!recentSalesBody) return;
+
+  recentSalesBody.innerHTML = recentSales.map(s => `
     <tr>
       <td>${s.product}</td>
       <td>${s.customer}</td>
@@ -63,18 +74,26 @@ function renderRecentSales(){
 }
 
 function renderAlerts(){
+  const alertsList = document.getElementById('alertsList');
+  if (!alertsList) return;
+
   const lowStock = getLowStockItems().map(p => ({
     name: p.name,
-    meta: ${p.stock} left (reorder below ${p.lowStockThreshold}),
-    tag: "LOW STOCK", tagClass: "tag-low"
+    meta: `${p.stock} left (reorder below ${p.lowStockThreshold})`,
+    tag: "LOW STOCK",
+    tagClass: "tag-low"
   }));
+
   const expiring = getExpiringSoonItems().map(p => ({
     name: p.name,
-    meta: Expires in ${daysUntil(p.expiryDate)} day(s) — ${p.expiryDate},
-    tag: "EXPIRING", tagClass: "tag-expiry"
+    meta: `Expires in ${daysUntil(p.expiryDate)} day(s) — ${p.expiryDate}`,
+    tag: "EXPIRING",
+    tagClass: "tag-expiry"
   }));
+
   const all = [...lowStock, ...expiring];
-  document.getElementById('alertsList').innerHTML = all.map(a => `
+
+  alertsList.innerHTML = all.map(a => `
     <div class="alert-item">
       <div>
         <div class="alert-name">${a.name}</div>
@@ -86,17 +105,26 @@ function renderAlerts(){
 }
 
 function renderDate(){
+  const dateEl = document.getElementById('todayDate');
+  if (!dateEl) return;
+
   const today = new Date();
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('todayDate').textContent = "Welcome back — " + today.toLocaleDateString('en-UG', options);
+  dateEl.textContent = 'Welcome back — ' + today.toLocaleDateString('en-UG', options);
 }
 
 function renderNavBadge(){
-  const raw = localStorage.getItem('joyvet_orders');
-  const orders = raw ? JSON.parse(raw) : [];
-  const pending = orders.filter(o => o.status === "pending").length;
   const badge = document.getElementById('navBadge');
-  if(badge) badge.textContent = pending > 0 ? pending : '';
+  if (!badge) return;
+
+  try {
+    const raw = localStorage.getItem('joyvet_orders');
+    const orders = raw ? JSON.parse(raw) : [];
+    const pending = Array.isArray(orders) ? orders.filter(o => o.status === 'pending').length : 0;
+    badge.textContent = pending > 0 ? String(pending) : '';
+  } catch (error) {
+    badge.textContent = '';
+  }
 }
 
 function renderAll(){
@@ -107,4 +135,8 @@ function renderAll(){
   renderNavBadge();
 }
 
-renderAll();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderAll);
+} else {
+  renderAll();
+}
