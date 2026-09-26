@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyVet Drug Shop — Stock & Expiry</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🐾</div>
+        <div>
+          <div class="brand-name">JoyVet</div>
+          <div class="brand-sub">Drug Shop</div>
+        </div>
+      </div>
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
+        <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
+        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders</a>
+        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+        <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+        <a class="nav-link active" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="topbar-title">Stock & Expiry</h1>
+          <p class="topbar-sub">Inventory health overview</p>
+        </div>
+      </header>
+      <section class="panel">
+        <div id="alertsList">
+          <div class="alert-item"><div><div class="alert-name">ECF Vaccine (Muguga)</div><div class="alert-meta">3 left (reorder below 5)</div></div><span class="alert-tag tag-low">LOW STOCK</span></div>
+          <div class="alert-item"><div><div class="alert-name">Amoxicillin Inj. 100ml</div><div class="alert-meta">Expires in 9 day(s) — 2026-10-05</div></div><span class="alert-tag tag-expiry">EXPIRING</span></div>
+          <div class="alert-item"><div><div class="alert-name">Dewormer (Albendazole)</div><div class="alert-meta">8 left (reorder below 12)</div></div><span class="alert-tag tag-low">LOW STOCK</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

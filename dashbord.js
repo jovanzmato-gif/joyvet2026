@@ -14,29 +14,29 @@ const recentSales = [
   {product:"Mineral Lick Supplement", customer:"Ssebunya Dairy", qty:3, amount:135000, time:"11:20 AM"},
 ];
 
-function formatUGX(n){
+function formatUGX(n) {
   return "UGX " + Number(n || 0).toLocaleString();
 }
 
-function daysUntil(dateStr){
+function daysUntil(dateStr) {
   const today = new Date();
   const target = new Date(dateStr);
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 }
 
-function getTodaysSalesTotal(){
+function getTodaysSalesTotal() {
   return recentSales.reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
 }
 
-function getLowStockItems(){
+function getLowStockItems() {
   return products.filter(p => Number(p.stock || 0) < Number(p.lowStockThreshold || 0));
 }
 
-function getExpiringSoonItems(daysWindow = 30){
+function getExpiringSoonItems(daysWindow = 30) {
   return products.filter(p => daysUntil(p.expiryDate) <= daysWindow);
 }
 
-function renderStatCards(){
+function renderStatCards() {
   const statGrid = document.getElementById('statGrid');
   if (!statGrid) return;
 
@@ -58,7 +58,7 @@ function renderStatCards(){
   `).join('');
 }
 
-function renderRecentSales(){
+function renderRecentSales() {
   const recentSalesBody = document.getElementById('recentSalesBody');
   if (!recentSalesBody) return;
 
@@ -73,7 +73,7 @@ function renderRecentSales(){
   `).join('');
 }
 
-function renderAlerts(){
+function renderAlerts() {
   const alertsList = document.getElementById('alertsList');
   if (!alertsList) return;
 
@@ -104,7 +104,7 @@ function renderAlerts(){
   `).join('') || '<p style="font-size:12.5px; color:var(--muted);">No alerts right now.</p>';
 }
 
-function renderDate(){
+function renderDate() {
   const dateEl = document.getElementById('todayDate');
   if (!dateEl) return;
 
@@ -113,7 +113,7 @@ function renderDate(){
   dateEl.textContent = 'Welcome back — ' + today.toLocaleDateString('en-UG', options);
 }
 
-function renderNavBadge(){
+function renderNavBadge() {
   const badge = document.getElementById('navBadge');
   if (!badge) return;
 
@@ -127,7 +127,7 @@ function renderNavBadge(){
   }
 }
 
-function renderAll(){
+function renderAll() {
   renderDate();
   renderStatCards();
   renderRecentSales();

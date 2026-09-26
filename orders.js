@@ -1,16 +1,17 @@
 const ORDERS_KEY = 'joyvet_orders';
 
-function loadOrders(){
+function loadOrders() {
   const raw = localStorage.getItem(ORDERS_KEY);
   return raw ? JSON.parse(raw) : [];
 }
-function saveOrders(orders){
+
+function saveOrders(orders) {
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
 }
 
-let statusFilter = "all";
+let statusFilter = 'all';
 
-function setStatusFilter(status){
+function setStatusFilter(status) {
   statusFilter = status;
   document.querySelectorAll('#statusFilter .period-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.status === status);
@@ -18,33 +19,40 @@ function setStatusFilter(status){
   renderOrders();
 }
 
-function renderStats(){
+function renderStats() {
   const orders = loadOrders();
-  const pending = orders.filter(o => o.status === "pending").length;
-  const confirmed = orders.filter(o => o.status === "confirmed").length;
-  const fulfilled = orders.filter(o => o.status === "fulfilled").length;
+  const pending = orders.filter(o => o.status === 'pending').length;
+  const confirmed = orders.filter(o => o.status === 'confirmed').length;
+  const fulfilled = orders.filter(o => o.status === 'fulfilled').length;
 
   const cards = [
-    {icon:"🔔", label:"Pending", num: pending},
-    {icon:"✅", label:"Confirmed", num: confirmed},
-    {icon:"📦", label:"Fulfilled", num: fulfilled},
-    {icon:"🧾", label:"Total Orders", num: orders.length},
+    {icon: '🔔', label: 'Pending', num: pending},
+    {icon: '✅', label: 'Confirmed', num: confirmed},
+    {icon: '📦', label: 'Fulfilled', num: fulfilled},
+    {icon: '🧾', label: 'Total Orders', num: orders.length},
   ];
 
-  document.getElementById('orderStats').innerHTML = cards.map(c => `
-    <div class="stat-card"><div class="icon">${c.icon}</div><div class="num">${c.num}</div><div class="label">${c.label}</div></div>
-  `).join('');
+  const orderStats = document.getElementById('orderStats');
+  if (orderStats) {
+    orderStats.innerHTML = cards.map(c => `
+      <div class="stat-card">
+        <div class="icon">${c.icon}</div>
+        <div class="num">${c.num}</div>
+        <div class="label">${c.label}</div>
+      </div>
+    `).join('');
+  }
 
-  document.getElementById('navBadge').textContent = pending > 0 ? pending : '';
+  const navBadge = document.getElementById('navBadge');
+  if (navBadge) navBadge.textContent = pending > 0 ? pending : '';
 }
 
-function renderOrders(){
-  const orders = loadOrders()
-    .slice()
-    .reverse()
-    .filter(o => statusFilter === "all" || o.status === statusFilter);
+function renderOrders() {
+  const orders = loadOrders().slice().reverse().filter(o => statusFilter === 'all' || o.status === statusFilter);
+  const ordersList = document.getElementById('ordersList');
+  if (!ordersList) return;
 
-  document.getElementById('ordersList').innerHTML = orders.length === 0
+  ordersList.innerHTML = orders.length === 0
     ? '<p style="font-size:12.5px; color:var(--muted);">No orders here.</p>'
     : orders.map(o => `
       <div class="order-card">
@@ -57,17 +65,17 @@ function renderOrders(){
         </div>
 
         <ul class="order-items-list">
-          ${o.items.map(i => <li>${i.name} × ${i.qty}${i.type === 'chicks' ? ' — needed by ' + i.meta.neededBy : ''}</li>).join('')}
+          ${o.items.map(i => `<li>${i.name} × ${i.qty}${i.type === 'chicks' ? ' — needed by ' + i.meta.neededBy : ''}</li>`).join('')}
         </ul>
 
-        ${o.staffNote ? <div class="track-note">Note: ${o.staffNote}</div> : ''}
+        ${o.staffNote ? `<div class="track-note">Note: ${o.staffNote}</div>` : ''}
 
         <div class="order-actions">
-          ${o.status === "pending" ? `
+          ${o.status === 'pending' ? `
             <button class="btn-confirm" onclick="respondToOrder('${o.id}', 'confirmed')">✓ Confirm Available</button>
             <button class="btn-unavailable" onclick="respondToOrder('${o.id}', 'unavailable')">✕ Mark Unavailable</button>
           ` : ''}
-          ${o.status === "confirmed" ? `
+          ${o.status === 'confirmed' ? `
             <button class="btn-fulfill" onclick="respondToOrder('${o.id}', 'fulfilled')">📦 Mark Fulfilled</button>
           ` : ''}
         </div>
@@ -75,18 +83,18 @@ function renderOrders(){
     `).join('');
 }
 
-function respondToOrder(orderId, newStatus){
+function respondToOrder(orderId, newStatus) {
   const orders = loadOrders();
   const order = orders.find(o => o.id === orderId);
-  if(!order) return;
+  if (!order) return;
 
-  if(newStatus === "unavailable"){
-    const note = prompt("What's unavailable, or any note for the customer?", "");
-    order.staffNote = note || "Some items are currently unavailable.";
-  } else if(newStatus === "confirmed"){
-    order.staffNote = "All items confirmed available.";
-  } else if(newStatus === "fulfilled"){
-    order.staffNote = order.staffNote || "Order completed.";
+  if (newStatus === 'unavailable') {
+    const note = prompt("What's unavailable, or any note for the customer?", '');
+    order.staffNote = note || 'Some items are currently unavailable.';
+  } else if (newStatus === 'confirmed') {
+    order.staffNote = 'All items confirmed available.';
+  } else if (newStatus === 'fulfilled') {
+    order.staffNote = order.staffNote || 'Order completed.';
   }
 
   order.status = newStatus;
@@ -96,11 +104,18 @@ function respondToOrder(orderId, newStatus){
 }
 
 window.addEventListener('storage', (e) => {
-  if(e.key === ORDERS_KEY){
+  if (e.key === ORDERS_KEY) {
     renderStats();
     renderOrders();
   }
 });
 
-renderStats();
-renderOrders();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    renderStats();
+    renderOrders();
+  });
+} else {
+  renderStats();
+  renderOrders();
+}

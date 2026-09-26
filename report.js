@@ -1,4 +1,4 @@
-function daysAgo(n){
+function daysAgo(n) {
   const d = new Date();
   d.setDate(d.getDate() - n);
   return d;
@@ -22,22 +22,23 @@ const salesHistory = [
   {date: daysAgo(60), product:"ECF Vaccine (Muguga)",      amount:36000,  worker:"Auma Ritah",      payment:"mtn"},
 ];
 
-let currentPeriod = "today";
+let currentPeriod = 'today';
 
-function isSameDay(a, b){ return a.toDateString() === b.toDateString(); }
-function isSameMonth(a, b){ return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }
-function isSameYear(a, b){ return a.getFullYear() === b.getFullYear(); }
+function isSameDay(a, b) { return a.toDateString() === b.toDateString(); }
+function isSameMonth(a, b) { return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }
+function isSameYear(a, b) { return a.getFullYear() === b.getFullYear(); }
 
-function getFilteredSales(){
+function getFilteredSales() {
   const now = new Date();
   return salesHistory.filter(sale => {
-    if(currentPeriod === "today") return isSameDay(sale.date, now);
-    if(currentPeriod === "month") return isSameMonth(sale.date, now);
-    if(currentPeriod === "year")  return isSameYear(sale.date, now);
+    if (currentPeriod === 'today') return isSameDay(sale.date, now);
+    if (currentPeriod === 'month') return isSameMonth(sale.date, now);
+    if (currentPeriod === 'year') return isSameYear(sale.date, now);
+    return true;
   });
 }
 
-function setPeriod(period){
+function setPeriod(period) {
   currentPeriod = period;
   document.querySelectorAll('.period-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.period === period);
@@ -45,30 +46,44 @@ function setPeriod(period){
   renderReportsAll();
 }
 
-function formatUGX(n){ return "UGX " + n.toLocaleString(); }
+function formatUGX(n) { return 'UGX ' + Number(n || 0).toLocaleString(); }
 
-function renderStats(){
+function renderStats() {
   const sales = getFilteredSales();
   const total = sales.reduce((sum, s) => sum + s.amount, 0);
   const count = sales.length;
   const average = count > 0 ? Math.round(total / count) : 0;
   const cards = [
-    {icon:"💰", label:"Total Sales", num: formatUGX(total)},
-    {icon:"🧾", label:"Transactions", num: count},
-    {icon:"📊", label:"Average Sale", num: formatUGX(average)},
+    {icon: '💰', label: 'Total Sales', num: formatUGX(total)},
+    {icon: '🧾', label: 'Transactions', num: count},
+    {icon: '📊', label: 'Average Sale', num: formatUGX(average)},
   ];
-  document.getElementById('reportStats').innerHTML = cards.map(c => `
-    <div class="stat-card"><div class="icon">${c.icon}</div><div class="num">${c.num}</div><div class="label">${c.label}</div></div>
-  `).join('');
+
+  const reportStats = document.getElementById('reportStats');
+  if (reportStats) {
+    reportStats.innerHTML = cards.map(c => `
+      <div class="stat-card"><div class="icon">${c.icon}</div><div class="num">${c.num}</div><div class="label">${c.label}</div></div>
+    `).join('');
+  }
 }
 
-function renderTopProducts(){
+function renderTopProducts() {
   const sales = getFilteredSales();
   const totals = {};
-  sales.forEach(s => { totals[s.product] = (totals[s.product] || 0) + s.amount; });
-  const ranked = Object.entries(totals).map(([name, amount]) => ({name, amount})).sort((a, b) => b.amount - a.amount);
+  sales.forEach(s => {
+    totals[s.product] = (totals[s.product] || 0) + s.amount;
+  });
+
+  const ranked = Object.entries(totals)
+    .map(([name, amount]) => ({name, amount}))
+    .sort((a, b) => b.amount - a.amount);
+
   const highest = ranked.length > 0 ? ranked[0].amount : 1;
-  document.getElementById('topProducts').innerHTML = ranked.length === 0
+  const topProducts = document.getElementById('topProducts');
+
+  if (!topProducts) return;
+
+  topProducts.innerHTML = ranked.length === 0
     ? '<p style="font-size:12.5px; color:var(--muted);">No sales in this period.</p>'
     : ranked.map(p => `
         <div class="bar-row">
@@ -78,27 +93,47 @@ function renderTopProducts(){
       `).join('');
 }
 
-function renderStaffPerformance(){
+function renderStaffPerformance() {
   const sales = getFilteredSales();
   const byWorker = {};
+
   sales.forEach(s => {
-    if(!byWorker[s.worker]) byWorker[s.worker] = {count: 0, total: 0};
+    if (!byWorker[s.worker]) byWorker[s.worker] = {count: 0, total: 0};
     byWorker[s.worker].count += 1;
     byWorker[s.worker].total += s.amount;
   });
-  const ranked = Object.entries(byWorker).map(([name, data]) => ({name, ...data})).sort((a, b) => b.total - a.total);
-  document.getElementById('staffPerformanceBody').innerHTML = ranked.length === 0
+
+  const ranked = Object.entries(byWorker)
+    .map(([name, data]) => ({name, ...data}))
+    .sort((a, b) => b.total - a.total);
+
+  const staffPerformanceBody = document.getElementById('staffPerformanceBody');
+  if (!staffPerformanceBody) return;
+
+  staffPerformanceBody.innerHTML = ranked.length === 0
     ? '<tr><td colspan="3" style="color:var(--muted); font-size:12px;">No sales in this period.</td></tr>'
-    : ranked.map(w => <tr><td>${w.name}</td><td>${w.count}</td><td class="amount">${formatUGX(w.total)}</td></tr>).join('');
+    : ranked.map(w => `
+        <tr>
+          <td>${w.name}</td>
+          <td>${w.count}</td>
+          <td class="amount">${formatUGX(w.total)}</td>
+        </tr>
+      `).join('');
 }
 
-function renderPaymentBreakdown(){
+function renderPaymentBreakdown() {
   const sales = getFilteredSales();
   const total = sales.reduce((sum, s) => sum + s.amount, 0);
-  const labels = {cash: "💵 Cash", mtn: "📱 MTN MoMo", airtel: "📱 Airtel Money", credit: "📒 On Account"};
+  const labels = {cash: '💵 Cash', mtn: '📱 MTN MoMo', airtel: '📱 Airtel Money', credit: '📒 On Account'};
   const totals = {cash: 0, mtn: 0, airtel: 0, credit: 0};
-  sales.forEach(s => { totals[s.payment] += s.amount; });
-  document.getElementById('paymentBreakdown').innerHTML = `
+  sales.forEach(s => {
+    totals[s.payment] += s.amount;
+  });
+
+  const paymentBreakdown = document.getElementById('paymentBreakdown');
+  if (!paymentBreakdown) return;
+
+  paymentBreakdown.innerHTML = `
     <div class="payment-breakdown-grid">
       ${Object.keys(labels).map(key => {
         const amount = totals[key];
@@ -115,20 +150,33 @@ function renderPaymentBreakdown(){
   `;
 }
 
-function renderNavBadge(){
-  const raw = localStorage.getItem('joyvet_orders');
-  const orders = raw ? JSON.parse(raw) : [];
-  const pending = orders.filter(o => o.status === "pending").length;
-  const badge = document.getElementById('navBadge');
-  if(badge) badge.textContent = pending > 0 ? pending : '';
+function renderNavBadge() {
+  const navBadge = document.getElementById('navBadge');
+  if (!navBadge) return;
+
+  try {
+    const raw = localStorage.getItem('joyvet_orders');
+    const orders = raw ? JSON.parse(raw) : [];
+    const pending = Array.isArray(orders) ? orders.filter(o => o.status === 'pending').length : 0;
+    navBadge.textContent = pending > 0 ? String(pending) : '';
+  } catch (error) {
+    navBadge.textContent = '';
+  }
 }
 
-function renderReportsAll(){
+function renderReportsAll() {
   renderStats();
   renderTopProducts();
   renderStaffPerformance();
   renderPaymentBreakdown();
 }
 
-renderReportsAll();
-renderNavBadge();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    renderReportsAll();
+    renderNavBadge();
+  });
+} else {
+  renderReportsAll();
+  renderNavBadge();
+}

@@ -19,8 +19,10 @@ let cart = [];
 let selectedPayment = "cash";
 let salesLog = [];
 
-function populateCashierDropdown(){
+function populateCashierDropdown() {
   const select = document.getElementById('cashierSelect');
+  if (!select) return;
+
   staffList.forEach(s => {
     const option = document.createElement('option');
     option.value = s.id;
@@ -29,61 +31,80 @@ function populateCashierDropdown(){
   });
 }
 
-function renderClock(){
+function renderClock() {
+  const clockEl = document.getElementById('posClock');
+  if (!clockEl) return;
+
   const now = new Date();
-  document.getElementById('posClock').textContent = now.toLocaleTimeString('en-UG', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  clockEl.textContent = now.toLocaleTimeString('en-UG', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
 }
 
-function renderProductGrid(){
-  const query = document.getElementById('productSearch').value.toLowerCase().trim();
+function renderProductGrid() {
+  const searchEl = document.getElementById('productSearch');
+  const gridEl = document.getElementById('productGrid');
+  if (!searchEl || !gridEl) return;
+
+  const query = searchEl.value.toLowerCase().trim();
   const filtered = products.filter(p => p.name.toLowerCase().includes(query));
-  document.getElementById('productGrid').innerHTML = filtered.map(p => `
-    <div class="product-card ${p.stock === 0 ? 'out-of-stock' : ''}" onclick="${p.stock === 0 ? '' : addToCart(${p.id})}">
-      <div class="product-icon">${p.icon}</div>
-      <div class="product-name">${p.name}</div>
-      <div class="product-price">UGX ${p.price.toLocaleString()}</div>
-      <div class="product-stock">${p.stock === 0 ? 'Out of stock' : p.stock + ' in stock'}</div>
-    </div>
-  `).join('');
+
+  gridEl.innerHTML = filtered.map(p => {
+    const clickAction = p.stock === 0 ? 'return false;' : `addToCart(${p.id});`;
+    return `
+      <div class="product-card ${p.stock === 0 ? 'out-of-stock' : ''}" onclick="${clickAction}">
+        <div class="product-icon">${p.icon}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">UGX ${p.price.toLocaleString()}</div>
+        <div class="product-stock">${p.stock === 0 ? 'Out of stock' : p.stock + ' in stock'}</div>
+      </div>
+    `;
+  }).join('');
 }
 
-function addToCart(productId){
+function addToCart(productId) {
   const product = products.find(p => p.id === productId);
+  if (!product) return;
+
   const existing = cart.find(item => item.productId === productId);
-  if(existing){
-    if(existing.qty < product.stock){ existing.qty += 1; }
+  if (existing) {
+    if (existing.qty < product.stock) existing.qty += 1;
   } else {
     cart.push({productId: product.id, name: product.name, price: product.price, qty: 1});
   }
   renderCart();
 }
 
-function changeQty(productId, delta){
+function changeQty(productId, delta) {
   const item = cart.find(i => i.productId === productId);
   const product = products.find(p => p.id === productId);
-  if(!item) return;
+  if (!item || !product) return;
+
   item.qty += delta;
-  if(item.qty <= 0){
+  if (item.qty <= 0) {
     cart = cart.filter(i => i.productId !== productId);
-  } else if(item.qty > product.stock){
+  } else if (item.qty > product.stock) {
     item.qty = product.stock;
   }
   renderCart();
 }
 
-function removeFromCart(productId){
+function removeFromCart(productId) {
   cart = cart.filter(i => i.productId !== productId);
   renderCart();
 }
 
-function clearCart(){ cart = []; renderCart(); }
+function clearCart() {
+  cart = [];
+  renderCart();
+}
 
-function getCartTotal(){
+function getCartTotal() {
   return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 }
 
-function renderCart(){
+function renderCart() {
   const container = document.getElementById('cartItems');
+  if (!container) return;
+
   container.innerHTML = cart.length === 0
     ? '<p class="cart-empty">Cart is empty — tap a product to add it.</p>'
     : cart.map(item => `
@@ -100,11 +121,13 @@ function renderCart(){
           <span class="cart-remove" onclick="removeFromCart(${item.productId})">✕</span>
         </div>
       `).join('');
-  document.getElementById('cartTotal').textContent = "UGX " + getCartTotal().toLocaleString();
+
+  const cartTotalEl = document.getElementById('cartTotal');
+  if (cartTotalEl) cartTotalEl.textContent = 'UGX ' + getCartTotal().toLocaleString();
   renderPaymentFields();
 }
 
-function selectPaymentMethod(method){
+function selectPaymentMethod(method) {
   selectedPayment = method;
   document.querySelectorAll('.method-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.method === method);
@@ -112,10 +135,12 @@ function selectPaymentMethod(method){
   renderPaymentFields();
 }
 
-function renderPaymentFields(){
+function renderPaymentFields() {
   const container = document.getElementById('paymentFields');
+  if (!container) return;
+
   const total = getCartTotal();
-  if(selectedPayment === "cash"){
+  if (selectedPayment === 'cash') {
     container.innerHTML = `
       <div class="form-group">
         <label for="cashReceived">Amount received (UGX)</label>
@@ -123,8 +148,8 @@ function renderPaymentFields(){
       </div>
       <p id="changeDue" style="font-size:12.5px; font-weight:600; color:var(--teal);"></p>
     `;
-  } else if(selectedPayment === "mtn" || selectedPayment === "airtel"){
-    const label = selectedPayment === "mtn" ? "MTN MoMo number" : "Airtel Money number";
+  } else if (selectedPayment === 'mtn' || selectedPayment === 'airtel') {
+    const label = selectedPayment === 'mtn' ? 'MTN MoMo number' : 'Airtel Money number';
     container.innerHTML = `
       <div class="form-group">
         <label for="momoNumber">${label}</label>
@@ -132,7 +157,7 @@ function renderPaymentFields(){
       </div>
       <p style="font-size:11.5px; color:var(--muted);">Customer confirms UGX ${total.toLocaleString()} on their phone, then tap Complete Sale.</p>
     `;
-  } else if(selectedPayment === "credit"){
+  } else if (selectedPayment === 'credit') {
     container.innerHTML = `
       <div class="form-group">
         <label for="creditCustomer">Customer name</label>
@@ -143,84 +168,130 @@ function renderPaymentFields(){
   }
 }
 
-function updateChange(){
+function updateChange() {
   const received = Number(document.getElementById('cashReceived').value) || 0;
   const total = getCartTotal();
   const change = received - total;
-  document.getElementById('changeDue').textContent = change >= 0
-    ? "Change due: UGX " + change.toLocaleString()
-    : "Short by UGX " + Math.abs(change).toLocaleString();
+  const changeDueEl = document.getElementById('changeDue');
+  if (!changeDueEl) return;
+
+  changeDueEl.textContent = change >= 0
+    ? 'Change due: UGX ' + change.toLocaleString()
+    : 'Short by UGX ' + Math.abs(change).toLocaleString();
 }
 
-function completeSale(){
+function completeSale() {
   const errorEl = document.getElementById('posError');
+  if (!errorEl) return;
   errorEl.textContent = '';
-  if(cart.length === 0){ errorEl.textContent = "Cart is empty."; return; }
+
+  if (cart.length === 0) {
+    errorEl.textContent = 'Cart is empty.';
+    return;
+  }
 
   const total = getCartTotal();
   const cashierId = Number(document.getElementById('cashierSelect').value);
   const cashier = staffList.find(s => s.id === cashierId);
-  let paymentDetail = "";
+  let paymentDetail = '';
 
-  if(selectedPayment === "cash"){
+  if (selectedPayment === 'cash') {
     const received = Number(document.getElementById('cashReceived').value) || 0;
-    if(received < total){ errorEl.textContent = "Amount received is less than the total."; return; }
-    paymentDetail = "Cash — change given: UGX " + (received - total).toLocaleString();
-  } else if(selectedPayment === "mtn" || selectedPayment === "airtel"){
+    if (received < total) {
+      errorEl.textContent = 'Amount received is less than the total.';
+      return;
+    }
+    paymentDetail = 'Cash — change given: UGX ' + (received - total).toLocaleString();
+  } else if (selectedPayment === 'mtn' || selectedPayment === 'airtel') {
     const number = document.getElementById('momoNumber').value.trim();
-    if(!number){ errorEl.textContent = "Enter the customer's mobile money number."; return; }
-    paymentDetail = (selectedPayment === "mtn" ? "MTN MoMo" : "Airtel Money") + " — " + number;
-  } else if(selectedPayment === "credit"){
+    if (!number) {
+      errorEl.textContent = "Enter the customer's mobile money number.";
+      return;
+    }
+    paymentDetail = (selectedPayment === 'mtn' ? 'MTN MoMo' : 'Airtel Money') + ' — ' + number;
+  } else if (selectedPayment === 'credit') {
     const customer = document.getElementById('creditCustomer').value.trim();
-    if(!customer){ errorEl.textContent = "Enter the customer's name for the account."; return; }
-    paymentDetail = "On Account — owed by " + customer;
+    if (!customer) {
+      errorEl.textContent = "Enter the customer's name for the account.";
+      return;
+    }
+    paymentDetail = 'On Account — owed by ' + customer;
   }
 
   cart.forEach(item => {
     const product = products.find(p => p.id === item.productId);
-    product.stock -= item.qty;
+    if (product) product.stock -= item.qty;
   });
 
   const sale = {
-    items: [...cart], total: total, payment: selectedPayment, paymentDetail: paymentDetail,
-    cashier: cashier.name, time: new Date().toLocaleTimeString('en-UG', {hour:'2-digit', minute:'2-digit'})
+    items: [...cart],
+    total: total,
+    payment: selectedPayment,
+    paymentDetail: paymentDetail,
+    cashier: cashier ? cashier.name : 'Unknown',
+    time: new Date().toLocaleTimeString('en-UG', {hour:'2-digit', minute:'2-digit'})
   };
-  salesLog.push(sale);
 
+  salesLog.push(sale);
   showReceipt(sale);
   cart = [];
   renderCart();
   renderProductGrid();
 }
 
-function showReceipt(sale){
+function showReceipt(sale) {
+  const receiptBody = document.getElementById('receiptBody');
+  if (!receiptBody) return;
+
   const itemsHTML = sale.items.map(item => `
     <div class="receipt-line"><span>${item.name} x${item.qty}</span><span>UGX ${(item.price * item.qty).toLocaleString()}</span></div>
   `).join('');
-  document.getElementById('receiptBody').innerHTML = `
+
+  receiptBody.innerHTML = `
     ${itemsHTML}
     <div class="receipt-line total"><span>Total</span><span>UGX ${sale.total.toLocaleString()}</span></div>
     <p class="receipt-meta">${sale.paymentDetail}<br>Served by ${sale.cashier} · ${sale.time}</p>
   `;
-  document.getElementById('receiptOverlay').classList.remove('hidden');
+
+  const overlay = document.getElementById('receiptOverlay');
+  if (overlay) overlay.classList.remove('hidden');
 }
 
-function closeReceipt(){
-  document.getElementById('receiptOverlay').classList.add('hidden');
-  document.getElementById('posError').textContent = '';
+function closeReceipt() {
+  const overlay = document.getElementById('receiptOverlay');
+  const errorEl = document.getElementById('posError');
+  if (overlay) overlay.classList.add('hidden');
+  if (errorEl) errorEl.textContent = '';
 }
 
-function renderNavBadge(){
-  const raw = localStorage.getItem('joyvet_orders');
-  const orders = raw ? JSON.parse(raw) : [];
-  const pending = orders.filter(o => o.status === "pending").length;
+function renderNavBadge() {
   const badge = document.getElementById('navBadge');
-  if(badge) badge.textContent = pending > 0 ? pending : '';
+  if (!badge) return;
+
+  try {
+    const raw = localStorage.getItem('joyvet_orders');
+    const orders = raw ? JSON.parse(raw) : [];
+    const pending = Array.isArray(orders) ? orders.filter(o => o.status === 'pending').length : 0;
+    badge.textContent = pending > 0 ? String(pending) : '';
+  } catch (error) {
+    badge.textContent = '';
+  }
 }
 
-populateCashierDropdown();
-renderClock();
-setInterval(renderClock, 1000);
-renderProductGrid();
-renderCart();
-renderNavBadge();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    populateCashierDropdown();
+    renderClock();
+    setInterval(renderClock, 1000);
+    renderProductGrid();
+    renderCart();
+    renderNavBadge();
+  });
+} else {
+  populateCashierDropdown();
+  renderClock();
+  setInterval(renderClock, 1000);
+  renderProductGrid();
+  renderCart();
+  renderNavBadge();
+}
