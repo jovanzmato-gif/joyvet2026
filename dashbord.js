@@ -98,6 +98,11 @@ function setActiveUser(user) {
   localStorage.setItem(STORAGE_KEYS.activeUser, String(user.id));
 }
 
+function isOwner() {
+  const user = getActiveUser();
+  return Boolean(user && user.role === 'Owner');
+}
+
 function formatUGX(n) {
   return 'UGX ' + Number(n || 0).toLocaleString();
 }
@@ -265,6 +270,22 @@ function renderCurrentUser() {
   if (userRole) userRole.textContent = user.role;
 }
 
+function syncAccessPermissions() {
+  const ownerOnlyPanels = document.querySelectorAll('[data-owner-only]');
+  const canAccessOwnerSettings = isOwner();
+
+  ownerOnlyPanels.forEach(panel => {
+    if (panel) {
+      panel.classList.toggle('hidden', !canAccessOwnerSettings);
+    }
+  });
+
+  const stockForm = document.getElementById('stockAdjustForm');
+  if (stockForm) {
+    stockForm.classList.toggle('owner-limited', !canAccessOwnerSettings);
+  }
+}
+
 function clearMessage(elementId) {
   const msg = document.getElementById(elementId);
   if (msg) {
@@ -312,6 +333,7 @@ function renderAll() {
   renderNavBadge();
   renderInventoryTable();
   populateProductSelect();
+  syncAccessPermissions();
 }
 
 function loginUser(username, pin) {
@@ -331,6 +353,7 @@ function loginUser(username, pin) {
 
 function logoutUser() {
   setActiveUser(null);
+  clearMessage('authError');
   showAuthScreen();
 }
 
@@ -504,7 +527,8 @@ function attachEventListeners() {
 
   if (cancelConfirm) {
     cancelConfirm.addEventListener('click', () => {
-      document.getElementById('secureModal').classList.add('hidden');
+      const secureModal = document.getElementById('secureModal');
+      if (secureModal) secureModal.classList.add('hidden');
       state.pendingAction = null;
     });
   }
