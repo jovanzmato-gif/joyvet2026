@@ -29,7 +29,6 @@ body{
 
 .dashboard-body{min-height:100vh;}
 
-/* ===== Layout ===== */
 .app-shell{display:flex; min-height:100vh;}
 .sidebar{
   width:240px;
@@ -172,7 +171,6 @@ body{
 .tag-low{background:var(--red-soft); color:var(--red);}
 .tag-expiry{background:#FCEFD8; color:#A5730F;}
 
-/* ===== Forms ===== */
 .form-group{margin-bottom:13px;}
 label{
   display:block;
@@ -206,7 +204,27 @@ input:focus, select:focus{
 .status-message.error{color:var(--red);}
 .status-message.success{color:#1D7A45;}
 
-/* ===== Auth ===== */
+.owner-panel{border:1px solid rgba(232,163,61,0.4); background:linear-gradient(180deg, rgba(253,243,225,0.6), rgba(255,255,255,1));}
+.owner-panel .panel-head h2{color:var(--teal);}
+
+.audit-log-list{display:flex; flex-direction:column; gap:10px;}
+.audit-item{
+  display:flex; justify-content:space-between; gap:12px;
+  padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+  background:rgba(255,255,255,0.7);
+}
+.audit-item strong{font-size:12px; display:block;}
+.audit-item small{color:var(--muted); font-size:11px;}
+.audit-item .tag{
+  font-size:10px;
+  font-weight:700;
+  background:var(--amber-soft);
+  color:var(--teal);
+  border-radius:999px;
+  padding:5px 8px;
+  align-self:flex-start;
+}
+
 .auth-overlay{
   position:fixed; inset:0; background:linear-gradient(160deg, rgba(18,56,50,0.94), rgba(11,38,34,0.96));
   display:flex; align-items:center; justify-content:center; padding:24px; z-index:1000;
@@ -236,7 +254,6 @@ input:focus, select:focus{
   margin:10px 0 0;
 }
 
-/* ===== Modal ===== */
 .modal{
   position:fixed; inset:0;
   background:rgba(11,38,34,0.56);
@@ -254,7 +271,6 @@ input:focus, select:focus{
 .modal-card p{margin:0 0 16px; text-align:center; color:var(--muted); font-size:13px;}
 .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:8px;}
 
-/* ===== Attendance / reused ===== */
 .attendance-body{background:linear-gradient(160deg, var(--teal) 0%, var(--teal-dark) 100%); min-height:100vh;}
 .attendance-shell{max-width:900px; margin:0 auto; padding:26px 20px 40px;}
 .attendance-topbar{
