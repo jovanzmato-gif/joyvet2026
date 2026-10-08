@@ -3,7 +3,8 @@ const STORAGE_KEYS = {
   sales: 'joyvet_recent_sales',
   users: 'joyvet_users',
   activeUser: 'joyvet_active_user',
-  orders: 'joyvet_orders'
+  orders: 'joyvet_orders',
+  auditLog: 'joyvet_audit_log'
 };
 
 const defaultProducts = [
@@ -34,10 +35,22 @@ const defaultUsers = [
   }
 ];
 
+const defaultAuditLog = [
+  {
+    id: 'audit-1',
+    actor: 'Yiga Josephat',
+    role: 'Owner',
+    action: 'Initial setup',
+    details: 'Inventory dashboard initialized',
+    time: new Date().toISOString()
+  }
+];
+
 const state = {
   users: [],
   products: [],
   sales: [],
+  auditLog: [],
   activeUser: null,
   pendingAction: null
 };
@@ -69,14 +82,17 @@ function ensureSeedData() {
   const savedUsers = getJson(STORAGE_KEYS.users, null);
   const savedProducts = getJson(STORAGE_KEYS.products, null);
   const savedSales = getJson(STORAGE_KEYS.sales, null);
+  const savedAuditLog = getJson(STORAGE_KEYS.auditLog, null);
 
   state.users = Array.isArray(savedUsers) && savedUsers.length ? savedUsers : defaultUsers;
   state.products = Array.isArray(savedProducts) && savedProducts.length ? savedProducts : defaultProducts;
   state.sales = Array.isArray(savedSales) && savedSales.length ? savedSales : defaultSales;
+  state.auditLog = Array.isArray(savedAuditLog) && savedAuditLog.length ? savedAuditLog : defaultAuditLog;
 
   saveJson(STORAGE_KEYS.users, state.users);
   saveJson(STORAGE_KEYS.products, state.products);
   saveJson(STORAGE_KEYS.sales, state.sales);
+  saveJson(STORAGE_KEYS.auditLog, state.auditLog);
 
   const activeUserId = localStorage.getItem(STORAGE_KEYS.activeUser);
   state.activeUser = state.users.find(user => user.id === activeUserId) || state.users[0];
@@ -103,23 +119,30 @@ function isOwner() {
   return Boolean(user && user.role === 'Owner');
 }
 
-function formatUGX(n) {
-  return 'UGX ' + Number(n || 0).toLocaleString();
+function addAuditEntry(action, details) {
+  const currentUser = getActiveUser();
+  const entry = {
+    id: `audit-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    actor: currentUser ? currentUser.fullName : 'System',
+    role: currentUser ? currentUser.role : 'System',
+    action,
+    details,
+    time: new Date().toISOString()
+  };
+
+  state.auditLog.unshift(entry);
+  saveJson(STORAGE_KEYS.auditLog, state.auditLog);
+  renderAuditLog();
 }
 
+function formatUGX(n) { return 'UGX ' + Number(n || 0).toLocaleString(); }
 function daysUntil(dateStr) {
   const today = new Date();
   const target = new Date(dateStr);
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 }
-
-function getLowStockItems() {
-  return state.products.filter(item => Number(item.stock || 0) < Number(item.lowStockThreshold || 0));
-}
-
-function getExpiringSoonItems(daysWindow = 30) {
-  return state.products.filter(item => Number(daysUntil(item.expiryDate)) <= daysWindow);
-}
+function getLowStockItems() { return state.products.filter(item => Number(item.stock || 0) < Number(item.lowStockThreshold || 0)); }
+function getExpiringSoonItems(daysWindow = 30) { return state.products.filter(item => Number(daysUntil(item.expiryDate)) <= daysWindow); }
 
 function renderStatCards() {
   const statGrid = document.getElementById('statGrid');
@@ -270,6 +293,23 @@ function renderCurrentUser() {
   if (userRole) userRole.textContent = user.role;
 }
 
+function renderAuditLog() {
+  const auditLogList = document.getElementById('auditLogList');
+  if (!auditLogList) return;
+
+  const entries = Array.isArray(state.auditLog) ? state.auditLog.slice(0, 6) : [];
+  auditLogList.innerHTML = entries.map(entry => `
+    <div class="audit-item">
+      <div>
+        <strong>${escapeHtml(entry.action)}</strong>
+        <small>${escapeHtml(entry.actor)} • ${escapeHtml(entry.role)} • ${escapeHtml(entry.details)}</small>
+        <small>${escapeHtml(new Date(entry.time).toLocaleString())}</small>
+      </div>
+      <span class="tag">${escapeHtml(entry.role)}</span>
+    </div>
+  `).join('') || '<p class="status-message">No activity recorded yet.</p>';
+}
+
 function syncAccessPermissions() {
   const ownerOnlyPanels = document.querySelectorAll('[data-owner-only]');
   const canAccessOwnerSettings = isOwner();
@@ -279,11 +319,6 @@ function syncAccessPermissions() {
       panel.classList.toggle('hidden', !canAccessOwnerSettings);
     }
   });
-
-  const stockForm = document.getElementById('stockAdjustForm');
-  if (stockForm) {
-    stockForm.classList.toggle('owner-limited', !canAccessOwnerSettings);
-  }
 }
 
 function clearMessage(elementId) {
@@ -333,6 +368,7 @@ function renderAll() {
   renderNavBadge();
   renderInventoryTable();
   populateProductSelect();
+  renderAuditLog();
   syncAccessPermissions();
 }
 
@@ -348,10 +384,15 @@ function loginUser(username, pin) {
 
   setActiveUser(user);
   clearMessage('authError');
+  addAuditEntry('Login', `${user.fullName} signed in`);
   renderAll();
 }
 
 function logoutUser() {
+  const currentUser = getActiveUser();
+  if (currentUser) {
+    addAuditEntry('Logout', `${currentUser.fullName} signed out`);
+  }
   setActiveUser(null);
   clearMessage('authError');
   showAuthScreen();
@@ -433,6 +474,7 @@ function createWorkerAccount(event) {
 
     state.users.push(worker);
     saveJson(STORAGE_KEYS.users, state.users);
+    addAuditEntry('New worker created', `${currentUser.fullName} created ${fullName} as worker`);
 
     document.getElementById('workerForm').reset();
     showMessage('workerMessage', `Worker account created for ${worker.fullName}.`, 'success');
@@ -480,6 +522,7 @@ function submitStockAdjustment(event) {
     });
 
     saveJson(STORAGE_KEYS.sales, state.sales);
+    addAuditEntry('Stock adjusted', `${currentUser.fullName} ${summary}`);
     document.getElementById('stockAdjustForm').reset();
     showMessage('stockMessage', `Inventory updated successfully: ${summary}`, 'success');
     renderAll();
