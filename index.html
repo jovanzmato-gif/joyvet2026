@@ -152,7 +152,7 @@
           </form>
         </div>
 
-        <div class="panel">
+        <div class="panel owner-panel" data-owner-only>
           <div class="panel-head">
             <h2>Worker Access</h2>
           </div>
@@ -196,6 +196,13 @@
           </thead>
           <tbody id="inventoryTableBody"></tbody>
         </table>
+      </section>
+
+      <section class="panel owner-panel" data-owner-only>
+        <div class="panel-head">
+          <h2>Audit Trail</h2>
+        </div>
+        <div id="auditLogList" class="audit-log-list"></div>
       </section>
     </main>
   </div>
