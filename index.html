@@ -1,93 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JoyVet Drug Shop — Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyVet Drug Shop — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dashboard-body">
 
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">🐾</div>
-      <div>
-        <div class="brand-name">JoyVet</div>
-        <div class="brand-sub">Drug Shop</div>
-      </div>
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="login-logo">🐾</div>
+      <h1 class="login-title">JoyVet Access</h1>
+      <p class="login-sub">Owner and staff secure sign in</p>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" type="text" placeholder="Enter your username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPin">PIN</label>
+          <input id="loginPin" type="password" inputmode="numeric" maxlength="6" placeholder="Enter your 4–6 digit PIN" required>
+        </div>
+
+        <button class="btn-primary full-width" type="submit">Sign In</button>
+      </form>
+      <div id="authError" class="login-error"></div>
     </div>
+  </div>
 
-    <nav class="nav-list">
-      <a class="nav-link active" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
-      <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
-      <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
-      <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
-      <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
-      <a class="nav-link" href="customer-portal.html"><span class="nav-icon">👥</span>Customers</a>
-      <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
-      <a class="nav-link" href="attendence.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
-      <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
-      <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="owner-chip">
-        <div class="owner-avatar">YJ</div>
+  <div id="appShell" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🐾</div>
         <div>
-          <div class="owner-name">Yiga Josephat</div>
-          <div class="owner-role">Owner</div>
+          <div class="brand-name">JoyVet</div>
+          <div class="brand-sub">Drug Shop</div>
         </div>
       </div>
-      <div class="footer-meta">
-        <div>Designed by Matovu Jovan</div>
-        <div>Support info: Contact Matovu Jovan on 0743901225</div>
-      </div>
-    </div>
-  </aside>
 
-  <main class="main">
-    <header class="topbar">
-      <div>
-        <h1 class="topbar-title">Dashboard</h1>
-        <p class="topbar-sub" id="todayDate"></p>
+      <div class="user-panel">
+        <div class="user-avatar" id="userAvatar">YJ</div>
+        <div>
+          <div id="currentUserName" class="user-name">Yiga Josephat</div>
+          <div id="currentUserRole" class="user-role">Owner</div>
+        </div>
       </div>
-      <div class="topbar-actions">
-        <a href="products.html" class="btn-ghost" style="text-decoration:none;">+ Add Product</a>
-        <a href="pos.html" class="btn-primary" style="text-decoration:none;">+ New Sale</a>
+
+      <nav class="nav-list">
+        <a class="nav-link active" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
+        <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
+        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+        <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
+        <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+        <a class="nav-link" href="customer-portal.html"><span class="nav-icon">👥</span>Customers</a>
+        <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+        <a class="nav-link" href="attendence.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
+        <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="signOutBtn" class="btn-ghost btn-small">Sign Out</button>
+        <div class="footer-meta">
+          <div>Designed by Matovu Jovan</div>
+          <div>Support info: Contact Matovu Jovan on 0743901225</div>
+        </div>
       </div>
-    </header>
+    </aside>
 
-    <section class="stat-grid" id="statGrid"></section>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="topbar-title">Dashboard</h1>
+          <p class="topbar-sub" id="todayDate"></p>
+        </div>
+        <div class="topbar-actions">
+          <a href="products.html" class="btn-ghost" style="text-decoration:none;">+ Add Product</a>
+          <button id="quickStockBtn" class="btn-primary" type="button">+ Add Stock</button>
+          <a href="pos.html" class="btn-primary" style="text-decoration:none;">+ New Sale</a>
+        </div>
+      </header>
 
-    <section class="content-grid">
-      <div class="panel">
+      <section class="stat-grid" id="statGrid"></section>
+
+      <section class="content-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Recent Sales</h2>
+            <a href="sales-history.html" class="panel-link">View all →</a>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Product</th><th>Customer</th><th>Qty</th><th>Amount</th><th>Time</th></tr>
+            </thead>
+            <tbody id="recentSalesBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Stock &amp; Expiry Alerts</h2>
+            <a href="stock-expiry.html" class="panel-link">View all →</a>
+          </div>
+          <div id="alertsList"></div>
+        </div>
+      </section>
+
+      <section class="content-grid inventory-layout">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Inventory Control</h2>
+          </div>
+
+          <form id="stockAdjustForm" class="inventory-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="stockProduct">Product</label>
+                <select id="stockProduct" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="stockQty">Qty to Add (+) / Reduce (-)</label>
+                <input id="stockQty" type="number" min="-999" step="1" placeholder="e.g. 20 or -5" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="stockReason">Reason</label>
+              <select id="stockReason">
+                <option value="Restock">Restock</option>
+                <option value="Missing stock">Missing stock</option>
+                <option value="Damaged">Damaged</option>
+                <option value="Sold correction">Sold correction</option>
+                <option value="Expiry write-off">Expiry write-off</option>
+                <option value="Inventory count">Inventory count</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="stockNote">Note</label>
+              <input id="stockNote" type="text" placeholder="Supplier receipt, stock count, etc.">
+            </div>
+
+            <button class="btn-primary full-width" type="submit">Save Stock Change</button>
+            <div id="stockMessage" class="status-message"></div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Worker Access</h2>
+          </div>
+
+          <form id="workerForm" class="inventory-form">
+            <div class="form-group">
+              <label for="workerName">Full Name</label>
+              <input id="workerName" type="text" placeholder="e.g. Mark Mugisha" required>
+            </div>
+
+            <div class="form-group">
+              <label for="workerUsername">Username</label>
+              <input id="workerUsername" type="text" placeholder="e.g. mark001" required>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="workerPin">New PIN</label>
+                <input id="workerPin" type="password" maxlength="6" inputmode="numeric" placeholder="4–6 digits" required>
+              </div>
+
+              <div class="form-group">
+                <label for="workerPassword">Secure Password</label>
+                <input id="workerPassword" type="password" placeholder="Set account password" required>
+              </div>
+            </div>
+
+            <button class="btn-ghost full-width" type="submit">Create Worker PIN</button>
+            <div id="workerMessage" class="status-message"></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
         <div class="panel-head">
-          <h2>Recent Sales</h2>
-          <a href="sales-history.html" class="panel-link">View all →</a>
+          <h2>Stock Overview</h2>
         </div>
         <table class="data-table">
           <thead>
-            <tr><th>Product</th><th>Customer</th><th>Qty</th><th>Amount</th><th>Time</th></tr>
+            <tr><th>Product</th><th>Units</th><th>Low Threshold</th><th>Expiry</th><th>Status</th></tr>
           </thead>
-          <tbody id="recentSalesBody"></tbody>
+          <tbody id="inventoryTableBody"></tbody>
         </table>
-      </div>
+      </section>
+    </main>
+  </div>
 
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Stock &amp; Expiry Alerts</h2>
-          <a href="stock-expiry.html" class="panel-link">View all →</a>
+  <div id="secureModal" class="modal hidden" aria-live="polite">
+    <div class="modal-card">
+      <div class="modal-icon">🔐</div>
+      <h2>Security check</h2>
+      <p id="securePrompt">Please confirm your password before continuing.</p>
+      <form id="secureForm">
+        <div class="form-group">
+          <label for="confirmPassword">Your password</label>
+          <input id="confirmPassword" type="password" placeholder="Enter your password" required>
         </div>
-        <div id="alertsList"></div>
-      </div>
-    </section>
+        <div class="modal-actions">
+          <button type="button" id="cancelConfirm" class="btn-ghost">Cancel</button>
+          <button type="submit" class="btn-primary">Continue</button>
+        </div>
+      </form>
+      <div id="secureError" class="login-error"></div>
+    </div>
+  </div>
 
-  </main>
-</div>
-
-<script src="dashbord.js"></script>
+  <script src="dashbord.js"></script>
 </body>
 </html>
