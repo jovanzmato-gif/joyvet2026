@@ -69,6 +69,69 @@ function saveJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+function hashSecret(value) {
+  const text = String(value ?? '').trim();
+  if (!text) return '';
+
+  if (window.crypto && crypto.subtle && window.TextEncoder) {
+    const bytes = new TextEncoder().encode(text);
+    return crypto.subtle.digest('SHA-256', bytes).then(hashBuffer => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+    });
+  }
+
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+}
+
+function isHashedSecret(value) {
+  return typeof value === 'string' && /^[a-f0-9]{64}$/i.test(value.trim());
+}
+
+function normalizeUserPassword(value) {
+  const text = String(value ?? '').trim();
+  if (!text) return '';
+  return isHashedSecret(text) ? text : hashSecret(text);
+}
+
+function normalizeUsers(users) {
+  if (!Array.isArray(users)) return [];
+
+  return users.map(user => {
+    if (!user || typeof user !== 'object') return user;
+    return {
+      ...user,
+      password: normalizeUserPassword(user.password)
+    };
+  });
+}
+
+function userPasswordMatches(user, candidatePassword) {
+  if (!user) return false;
+
+  const input = String(candidatePassword ?? '').trim();
+  if (!input) return false;
+
+  const stored = String(user.password ?? '').trim();
+  if (!stored) return false;
+
+  if (stored === input) return true;
+  return stored === hashSecret(input);
+}
+
+function userPinMatches(user, candidatePin) {
+  if (!user) return false;
+
+  const input = String(candidatePin ?? '').trim();
+  if (!input) return false;
+
+  return String(user.pin ?? '') === input;
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -84,7 +147,7 @@ function ensureSeedData() {
   const savedSales = getJson(STORAGE_KEYS.sales, null);
   const savedAuditLog = getJson(STORAGE_KEYS.auditLog, null);
 
-  state.users = Array.isArray(savedUsers) && savedUsers.length ? savedUsers : defaultUsers;
+  state.users = normalizeUsers(Array.isArray(savedUsers) && savedUsers.length ? savedUsers : defaultUsers);
   state.products = Array.isArray(savedProducts) && savedProducts.length ? savedProducts : defaultProducts;
   state.sales = Array.isArray(savedSales) && savedSales.length ? savedSales : defaultSales;
   state.auditLog = Array.isArray(savedAuditLog) && savedAuditLog.length ? savedAuditLog : defaultAuditLog;
@@ -372,13 +435,21 @@ function renderAll() {
   syncAccessPermissions();
 }
 
-function loginUser(username, pin) {
+function loginUser(username, pinOrPassword) {
   const trimmedUser = String(username || '').trim();
-  const trimmedPin = String(pin || '').trim();
-  const user = state.users.find(item => item.username.toLowerCase() === trimmedUser.toLowerCase() && item.pin === trimmedPin);
+  const trimmedInput = String(pinOrPassword || '').trim();
+  const user = state.users.find(item => item.username.toLowerCase() === trimmedUser.toLowerCase());
 
   if (!user) {
-    showMessage('authError', 'Incorrect username or PIN. Please try again.', 'error');
+    showMessage('authError', 'Incorrect username or PIN/password. Please try again.', 'error');
+    return;
+  }
+
+  const matchedPin = userPinMatches(user, trimmedInput);
+  const matchedPassword = userPasswordMatches(user, trimmedInput);
+
+  if (!matchedPin && !matchedPassword) {
+    showMessage('authError', 'Incorrect username or PIN/password. Please try again.', 'error');
     return;
   }
 
@@ -406,7 +477,10 @@ function secureAction(promptText, callback) {
   const form = document.getElementById('secureForm');
 
   if (prompt) prompt.textContent = promptText;
-  if (input) input.value = '';
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
   if (error) error.textContent = '';
 
   state.pendingAction = callback;
@@ -416,7 +490,7 @@ function secureAction(promptText, callback) {
     event.preventDefault();
     const currentUser = getActiveUser();
     const enteredPassword = String(input.value || '').trim();
-    const valid = currentUser && currentUser.password === enteredPassword;
+    const valid = currentUser && userPasswordMatches(currentUser, enteredPassword);
 
     if (!valid) {
       if (error) error.textContent = 'Incorrect password. Please try again.';
@@ -455,20 +529,25 @@ function createWorkerAccount(event) {
     return;
   }
 
+  if (password.length < 6) {
+    showMessage('workerMessage', 'Password must be at least 6 characters long.', 'error');
+    return;
+  }
+
   const existingUsername = state.users.some(user => user.username.toLowerCase() === username.toLowerCase());
   if (existingUsername) {
     showMessage('workerMessage', 'This username already exists. Please choose another one.', 'error');
     return;
   }
 
-  secureAction('Create worker account? Enter your password to confirm.', () => {
+  secureAction('Create worker account? Enter your secure password to confirm.', () => {
     const worker = {
       id: `worker-${Date.now()}`,
       fullName,
       role: 'Worker',
       username,
       pin,
-      password,
+      password: normalizeUserPassword(password),
       isOwner: false
     };
 
@@ -541,8 +620,8 @@ function attachEventListeners() {
     loginForm.addEventListener('submit', event => {
       event.preventDefault();
       const username = document.getElementById('loginUsername').value;
-      const pin = document.getElementById('loginPin').value;
-      loginUser(username, pin);
+      const credential = document.getElementById('loginPin').value;
+      loginUser(username, credential);
     });
   }
 
