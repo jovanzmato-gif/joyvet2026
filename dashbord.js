@@ -73,23 +73,18 @@ function hashSecret(value) {
   const text = String(value ?? '').trim();
   if (!text) return '';
 
-  if (window.crypto && crypto.subtle && window.TextEncoder) {
-    const bytes = new TextEncoder().encode(text);
-    return crypto.subtle.digest('SHA-256', bytes).then(hashBuffer => {
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-    });
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
   }
 
-  let hash = 0;
-  for (let index = 0; index < text.length; index += 1) {
-    hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
-  }
-  return hash.toString(16).padStart(8, '0');
+  const normalized = (hash >>> 0).toString(16).padStart(8, '0');
+  return `${normalized}${text.length.toString(16).padStart(2, '0')}`;
 }
 
 function isHashedSecret(value) {
-  return typeof value === 'string' && /^[a-f0-9]{64}$/i.test(value.trim());
+  return typeof value === 'string' && /^[a-f0-9]{10,}$/i.test(value.trim());
 }
 
 function normalizeUserPassword(value) {
@@ -652,6 +647,8 @@ function attachEventListeners() {
       const secureModal = document.getElementById('secureModal');
       if (secureModal) secureModal.classList.add('hidden');
       state.pendingAction = null;
+      const input = document.getElementById('confirmPassword');
+      if (input) input.value = '';
     });
   }
 }
