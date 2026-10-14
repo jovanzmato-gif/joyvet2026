@@ -1,13 +1,14 @@
-const productList = [
-  {name: 'Amoxicillin Inj. 100ml', category: 'Medicine', stock: 6, price: 35000, expiryDate: '2026-10-05', lowStockThreshold: 10},
-  {name: 'Oxytetracycline 20% LA', category: 'Medicine', stock: 14, price: 42000, expiryDate: '2026-12-01', lowStockThreshold: 10},
-  {name: 'ECF Vaccine (Muguga)', category: 'Vaccine', stock: 3, price: 18000, expiryDate: '2026-09-30', lowStockThreshold: 5},
-  {name: 'Broiler Starter Feed 70kg', category: 'Feed', stock: 22, price: 125000, expiryDate: '2027-03-10', lowStockThreshold: 15},
-  {name: 'Dewormer (Albendazole)', category: 'Medicine', stock: 8, price: 12000, expiryDate: '2026-11-18', lowStockThreshold: 12},
-  {name: 'Mineral Lick Supplement', category: 'Supplement', stock: 40, price: 45000, expiryDate: '2027-01-15', lowStockThreshold: 20},
-  {name: 'Wound Spray 200ml', category: 'Medicine', stock: 0, price: 15000, expiryDate: '2027-02-14', lowStockThreshold: 4},
-  {name: 'Layers Mash 70kg', category: 'Feed', stock: 17, price: 118000, expiryDate: '2027-02-01', lowStockThreshold: 12},
-];
+let productList = [];
+
+fetch('products_json.php')
+  .then(res => res.json())
+  .then(data => {
+    productList = data;
+    renderProductStats();
+    renderProductsTable();
+    renderNavBadge();
+  })
+  .catch(err => console.error('Could not load products:', err));
 
 function daysUntil(dateStr) {
   const today = new Date();
@@ -70,6 +71,4 @@ function renderNavBadge() {
   }
 }
 
-renderProductStats();
-renderProductsTable();
-renderNavBadge();
+
