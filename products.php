@@ -2,7 +2,7 @@
 require "db.php";
 
 $stmt = $pdo->query(
-    "SELECT product_id, name, category, price, stock, expiry_date
+    "SELECT product_id, name, category, price, stock,low_stock_threshold, expiry_date
      FROM products ORDER BY name"
 );
 $products = $stmt->fetchAll();
@@ -34,14 +34,14 @@ $products = $stmt->fetchAll();
                 <th>Action</th>
             </tr>
             <?php foreach ($products as $p): ?>
-                <tr>
+                <tr style="<?=((int)$p["stock"] <=(int)$p["low_stock_threshold"]) ?  "background:#ffd6d6;" : ""?>">
                     <td><?= (int)$p["product_id"] ?></td>
                     <td><?= htmlspecialchars($p["name"]) ?></td>
                     <td><?= htmlspecialchars($p["category"]) ?></td>
                     <td><?= htmlspecialchars($p["price"]) ?></td>
                     <td><?= (int)$p["stock"] ?></td>
                     <td><?= htmlspecialchars($p["expiry_date"] ?? "") ?></td>
-                    <td><a href="edit_products.php?id=<?=(int)$p["product_id"]?>">Edit</a></td>
+                    <td><a href="edit_product.php?id=<?=(int)$p["product_id"]?>">Edit</a></td>
                     <td>
     <form action="delete_product.php" method="POST"
           onsubmit="return confirm('Delete this product?');">
