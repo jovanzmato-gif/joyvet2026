@@ -144,7 +144,7 @@ function ensureSeedData() {
 
   state.users = normalizeUsers(Array.isArray(savedUsers) && savedUsers.length ? savedUsers : defaultUsers);
   state.products = Array.isArray(savedProducts) && savedProducts.length ? savedProducts : defaultProducts;
-  state.sales = Array.isArray(savedSales) && savedSales.length ? savedSales : defaultSales;
+  state.sales = [];
   state.auditLog = Array.isArray(savedAuditLog) && savedAuditLog.length ? savedAuditLog : defaultAuditLog;
 
   saveJson(STORAGE_KEYS.users, state.users);
