@@ -161,13 +161,34 @@ function setupStockForm() {
   const form = document.getElementById('stockAdjustForm');
   if (!form) return;
 
-  form.addEventListener('submit', event => {
+  form.addEventListener('submit', async event => {
     event.preventDefault();
     const msg = document.getElementById('stockMessage');
-    if (msg) {
-      msg.textContent = 'Saving stock changes to the database is the next step. Nothing was changed.';
-      msg.classList.remove('success');
-      msg.classList.add('error');
+    const productId = document.getElementById('stockProduct').value;
+    const qty = Number(document.getElementById('stockQty').value);
+
+    const body = new URLSearchParams({ product_id: productId, qty: String(qty) });
+
+    try {
+      const res = await fetch('stock_adjust.php', { method: 'POST', body });
+      const data = await res.json();
+
+      if (msg) {
+        msg.textContent = data.message;
+        msg.classList.remove('success', 'error');
+        msg.classList.add(data.ok ? 'success' : 'error');
+      }
+
+      if (data.ok) {
+        form.reset();
+        await loadData();
+      }
+    } catch (err) {
+      if (msg) {
+        msg.textContent = 'Could not reach the server. Please try again.';
+        msg.classList.remove('success');
+        msg.classList.add('error');
+      }
     }
   });
 }
