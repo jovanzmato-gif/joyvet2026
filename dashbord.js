@@ -1,131 +1,10 @@
-const STORAGE_KEYS = {
-  products: 'joyvet_products',
-  sales: 'joyvet_recent_sales',
-  users: 'joyvet_users',
-  activeUser: 'joyvet_active_user',
-  orders: 'joyvet_orders',
-  auditLog: 'joyvet_audit_log'
-};
-
-const defaultProducts = [
-  { id: 'amoxicillin', name: 'Amoxicillin Inj. 100ml', stock: 6, lowStockThreshold: 10, expiryDate: '2026-10-05' },
-  { id: 'oxy', name: 'Oxytetracycline 20% LA', stock: 14, lowStockThreshold: 10, expiryDate: '2026-12-01' },
-  { id: 'ecf', name: 'ECF Vaccine (Muguga)', stock: 3, lowStockThreshold: 5, expiryDate: '2026-09-30' },
-  { id: 'feed', name: 'Broiler Starter Feed 70kg', stock: 22, lowStockThreshold: 15, expiryDate: '2027-03-10' },
-  { id: 'dewormer', name: 'Dewormer (Albendazole)', stock: 8, lowStockThreshold: 12, expiryDate: '2026-11-18' },
-  { id: 'mineral', name: 'Mineral Lick Supplement', stock: 40, lowStockThreshold: 20, expiryDate: '2027-01-15' }
-];
-
-const defaultSales = [
-  { product: 'Amoxicillin Inj. 100ml', customer: 'Nakabiito Farm', qty: 2, amount: 70000, time: '09:14 AM' },
-  { product: 'Broiler Starter Feed 70kg', customer: 'Kato Poultry', qty: 5, amount: 625000, time: '10:02 AM' },
-  { product: 'Dewormer (Albendazole)', customer: 'Walk-in', qty: 1, amount: 12000, time: '10:47 AM' },
-  { product: 'Mineral Lick Supplement', customer: 'Ssebunya Dairy', qty: 3, amount: 135000, time: '11:20 AM' }
-];
-
-const defaultUsers = [
-  {
-    id: 'owner-1',
-    fullName: 'Yiga Josephat',
-    role: 'Owner',
-    username: 'owner',
-    pin: '1234',
-    password: 'joyvet123',
-    isOwner: true
-  }
-];
-
-const defaultAuditLog = [
-  {
-    id: 'audit-1',
-    actor: 'Yiga Josephat',
-    role: 'Owner',
-    action: 'Initial setup',
-    details: 'Inventory dashboard initialized',
-    time: new Date().toISOString()
-  }
-];
+// Joyvet dashboard: reads live data from the database.
+// No sample data is stored in the browser.
 
 const state = {
-  users: [],
   products: [],
-  sales: [],
-  auditLog: [],
-  activeUser: null,
-  pendingAction: null
+  sales: []
 };
-
-function getJson(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
-  } catch (error) {
-    return fallback;
-  }
-}
-
-function saveJson(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-function hashSecret(value) {
-  const text = String(value ?? '').trim();
-  if (!text) return '';
-
-  let hash = 2166136261;
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-
-  const normalized = (hash >>> 0).toString(16).padStart(8, '0');
-  return `${normalized}${text.length.toString(16).padStart(2, '0')}`;
-}
-
-function isHashedSecret(value) {
-  return typeof value === 'string' && /^[a-f0-9]{10,}$/i.test(value.trim());
-}
-
-function normalizeUserPassword(value) {
-  const text = String(value ?? '').trim();
-  if (!text) return '';
-  return isHashedSecret(text) ? text : hashSecret(text);
-}
-
-function normalizeUsers(users) {
-  if (!Array.isArray(users)) return [];
-
-  return users.map(user => {
-    if (!user || typeof user !== 'object') return user;
-    return {
-      ...user,
-      password: normalizeUserPassword(user.password)
-    };
-  });
-}
-
-function userPasswordMatches(user, candidatePassword) {
-  if (!user) return false;
-
-  const input = String(candidatePassword ?? '').trim();
-  if (!input) return false;
-
-  const stored = String(user.password ?? '').trim();
-  if (!stored) return false;
-
-  if (stored === input) return true;
-  return stored === hashSecret(input);
-}
-
-function userPinMatches(user, candidatePin) {
-  if (!user) return false;
-
-  const input = String(candidatePin ?? '').trim();
-  if (!input) return false;
-
-  return String(user.pin ?? '') === input;
-}
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -136,176 +15,112 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
-function ensureSeedData() {
-  const savedUsers = getJson(STORAGE_KEYS.users, null);
-  const savedProducts = getJson(STORAGE_KEYS.products, null);
-  const savedSales = getJson(STORAGE_KEYS.sales, null);
-  const savedAuditLog = getJson(STORAGE_KEYS.auditLog, null);
-
-  state.users = normalizeUsers(Array.isArray(savedUsers) && savedUsers.length ? savedUsers : defaultUsers);
-  state.products = Array.isArray(savedProducts) && savedProducts.length ? savedProducts : defaultProducts;
-  state.sales = [];
-  state.auditLog = Array.isArray(savedAuditLog) && savedAuditLog.length ? savedAuditLog : defaultAuditLog;
-
-  saveJson(STORAGE_KEYS.users, state.users);
-  saveJson(STORAGE_KEYS.products, state.products);
-  saveJson(STORAGE_KEYS.sales, state.sales);
-  saveJson(STORAGE_KEYS.auditLog, state.auditLog);
-
-  const activeUserId = localStorage.getItem(STORAGE_KEYS.activeUser);
-  state.activeUser = state.users.find(user => user.id === activeUserId) || state.users[0];
+function formatUGX(n) {
+  return 'UGX ' + Number(n || 0).toLocaleString();
 }
 
-function getActiveUser() {
-  ensureSeedData();
-  const activeUserId = localStorage.getItem(STORAGE_KEYS.activeUser);
-  return state.users.find(user => user.id === activeUserId) || state.users[0] || null;
-}
-
-function setActiveUser(user) {
-  if (!user) {
-    localStorage.removeItem(STORAGE_KEYS.activeUser);
-    state.activeUser = null;
-    return;
-  }
-  state.activeUser = user;
-  localStorage.setItem(STORAGE_KEYS.activeUser, String(user.id));
-}
-
-function isOwner() {
-  const user = getActiveUser();
-  return Boolean(user && user.role === 'Owner');
-}
-
-function addAuditEntry(action, details) {
-  const currentUser = getActiveUser();
-  const entry = {
-    id: `audit-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-    actor: currentUser ? currentUser.fullName : 'System',
-    role: currentUser ? currentUser.role : 'System',
-    action,
-    details,
-    time: new Date().toISOString()
-  };
-
-  state.auditLog.unshift(entry);
-  saveJson(STORAGE_KEYS.auditLog, state.auditLog);
-  renderAuditLog();
-}
-
-function formatUGX(n) { return 'UGX ' + Number(n || 0).toLocaleString(); }
 function daysUntil(dateStr) {
+  if (!dateStr) return null;
   const today = new Date();
   const target = new Date(dateStr);
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 }
-function getLowStockItems() { return state.products.filter(item => Number(item.stock || 0) < Number(item.lowStockThreshold || 0)); }
-function getExpiringSoonItems(daysWindow = 30) { return state.products.filter(item => Number(daysUntil(item.expiryDate)) <= daysWindow); }
+
+function getLowStockItems() {
+  return state.products.filter(p => Number(p.stock || 0) < Number(p.lowStockThreshold || 0));
+}
+
+function getExpiringSoonItems(windowDays = 30) {
+  return state.products.filter(p => {
+    const d = daysUntil(p.expiryDate);
+    return d !== null && d <= windowDays;
+  });
+}
+
+function renderDate() {
+  const el = document.getElementById('todayDate');
+  if (!el) return;
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  el.textContent = 'Welcome back — ' + new Date().toLocaleDateString('en-UG', options);
+}
 
 function renderStatCards() {
-  const statGrid = document.getElementById('statGrid');
-  if (!statGrid) return;
+  const grid = document.getElementById('statGrid');
+  if (!grid) return;
 
-  const lowStock = getLowStockItems();
-  const expiring = getExpiringSoonItems();
+  const total = state.sales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
   const cards = [
-    { icon: '💰', label: "Today's Sales", num: formatUGX(state.sales.reduce((sum, sale) => sum + Number(sale.amount || 0), 0)), cls: '' },
+    { icon: '💰', label: 'Recent Sales Total', num: formatUGX(total), cls: '' },
     { icon: '💊', label: 'Total Products', num: state.products.length, cls: '' },
-    { icon: '⚠️', label: 'Low Stock Items', num: lowStock.length, cls: 'alert' },
-    { icon: '⏳', label: 'Expiring Soon', num: expiring.length, cls: 'amber' }
+    { icon: '⚠️', label: 'Low Stock Items', num: getLowStockItems().length, cls: 'alert' },
+    { icon: '⏳', label: 'Expiring Soon', num: getExpiringSoonItems().length, cls: 'amber' }
   ];
 
-  statGrid.innerHTML = cards.map(card => `
-    <div class="stat-card ${card.cls}">
-      <div class="icon">${card.icon}</div>
-      <div class="num">${escapeHtml(card.num)}</div>
-      <div class="label">${escapeHtml(card.label)}</div>
-    </div>
-  `).join('');
+  grid.innerHTML = cards.map(c => `
+    <div class="stat-card ${c.cls}">
+      <div class="icon">${c.icon}</div>
+      <div class="num">${escapeHtml(c.num)}</div>
+      <div class="label">${escapeHtml(c.label)}</div>
+    </div>`).join('');
 }
 
 function renderRecentSales() {
-  const recentSalesBody = document.getElementById('recentSalesBody');
-  if (!recentSalesBody) return;
+  const body = document.getElementById('recentSalesBody');
+  if (!body) return;
 
-  recentSalesBody.innerHTML = state.sales.map(sale => `
+  body.innerHTML = state.sales.map(s => `
     <tr>
-      <td>${escapeHtml(sale.product)}</td>
-      <td>${escapeHtml(sale.customer)}</td>
-      <td>${escapeHtml(sale.qty)}</td>
-      <td class="amount">${escapeHtml(formatUGX(sale.amount))}</td>
-      <td>${escapeHtml(sale.time)}</td>
-    </tr>
-  `).join('');
+      <td>${escapeHtml(s.product)}</td>
+      <td>${escapeHtml(s.customer)}</td>
+      <td>${escapeHtml(s.qty)}</td>
+      <td class="amount">${escapeHtml(formatUGX(s.amount))}</td>
+      <td>${escapeHtml(s.time)}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="5">No sales recorded yet.</td></tr>';
 }
 
 function renderAlerts() {
-  const alertsList = document.getElementById('alertsList');
-  if (!alertsList) return;
+  const list = document.getElementById('alertsList');
+  if (!list) return;
 
-  const lowStock = getLowStockItems().map(product => ({
-    name: product.name,
-    meta: `${product.stock} left (reorder below ${product.lowStockThreshold})`,
+  const low = getLowStockItems().map(p => ({
+    name: p.name,
+    meta: `${p.stock} left (reorder below ${p.lowStockThreshold})`,
     tag: 'LOW STOCK',
     tagClass: 'tag-low'
   }));
 
-  const expiring = getExpiringSoonItems().map(product => ({
-    name: product.name,
-    meta: `Expires in ${daysUntil(product.expiryDate)} day(s) — ${product.expiryDate}`,
+  const expiring = getExpiringSoonItems().map(p => ({
+    name: p.name,
+    meta: `Expires in ${daysUntil(p.expiryDate)} day(s) — ${p.expiryDate}`,
     tag: 'EXPIRING',
     tagClass: 'tag-expiry'
   }));
 
-  const all = [...lowStock, ...expiring];
-
-  alertsList.innerHTML = all.map(item => `
+  list.innerHTML = [...low, ...expiring].map(item => `
     <div class="alert-item">
       <div>
         <div class="alert-name">${escapeHtml(item.name)}</div>
         <div class="alert-meta">${escapeHtml(item.meta)}</div>
       </div>
       <span class="alert-tag ${item.tagClass}">${escapeHtml(item.tag)}</span>
-    </div>
-  `).join('') || '<p style="font-size:12.5px; color:var(--muted);">No alerts right now.</p>';
-}
-
-function renderDate() {
-  const dateEl = document.getElementById('todayDate');
-  if (!dateEl) return;
-
-  const today = new Date();
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  dateEl.textContent = 'Welcome back — ' + today.toLocaleDateString('en-UG', options);
-}
-
-function renderNavBadge() {
-  const badge = document.getElementById('navBadge');
-  if (!badge) return;
-
-  try {
-    const orders = getJson(STORAGE_KEYS.orders, []);
-    const pending = Array.isArray(orders) ? orders.filter(order => order.status === 'pending').length : 0;
-    badge.textContent = pending > 0 ? String(pending) : '';
-  } catch (error) {
-    badge.textContent = '';
-  }
+    </div>`).join('') ||
+    '<p style="font-size:12.5px; color:var(--muted);">No alerts right now.</p>';
 }
 
 function renderInventoryTable() {
-  const inventoryTableBody = document.getElementById('inventoryTableBody');
-  if (!inventoryTableBody) return;
+  const body = document.getElementById('inventoryTableBody');
+  if (!body) return;
 
-  inventoryTableBody.innerHTML = state.products.map(product => {
-    const remaining = Number(product.stock || 0);
+  body.innerHTML = state.products.map(p => {
+    const remaining = Number(p.stock || 0);
     let status = 'Healthy';
     let statusClass = 'status-active';
 
-    if (remaining <= Number(product.lowStockThreshold || 0)) {
+    if (remaining <= Number(p.lowStockThreshold || 0)) {
       status = 'Low stock';
       statusClass = 'status-done';
     }
-
     if (remaining <= 0) {
       status = 'Out of stock';
       statusClass = 'status-done';
@@ -313,93 +128,26 @@ function renderInventoryTable() {
 
     return `
       <tr>
-        <td>${escapeHtml(product.name)}</td>
+        <td>${escapeHtml(p.name)}</td>
         <td>${escapeHtml(remaining)}</td>
-        <td>${escapeHtml(product.lowStockThreshold)}</td>
-        <td>${escapeHtml(product.expiryDate)}</td>
+        <td>${escapeHtml(p.lowStockThreshold)}</td>
+        <td>${escapeHtml(p.expiryDate || '')}</td>
         <td><span class="status-pill ${statusClass}">${status}</span></td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 }
 
 function populateProductSelect() {
-  const stockProduct = document.getElementById('stockProduct');
-  if (!stockProduct) return;
+  const select = document.getElementById('stockProduct');
+  if (!select) return;
 
-  stockProduct.innerHTML = state.products.map(product => `
-    <option value="${escapeHtml(product.id)}">${escapeHtml(product.name)} (${product.stock} units)</option>
-  `).join('');
+  select.innerHTML = state.products.map(p => `
+    <option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.stock)} units)</option>`).join('');
 }
 
-function renderCurrentUser() {
-  const user = getActiveUser();
-  const userAvatar = document.getElementById('userAvatar');
-  const userName = document.getElementById('currentUserName');
-  const userRole = document.getElementById('currentUserRole');
-
-  if (!user) {
-    if (userAvatar) userAvatar.textContent = '??';
-    if (userName) userName.textContent = 'Not signed in';
-    if (userRole) userRole.textContent = 'Access required';
-    return;
-  }
-
-  const initials = user.fullName.split(' ').slice(0, 2).map(part => part[0]).join('').toUpperCase();
-  if (userAvatar) userAvatar.textContent = initials;
-  if (userName) userName.textContent = user.fullName;
-  if (userRole) userRole.textContent = user.role;
-}
-
-function renderAuditLog() {
-  const auditLogList = document.getElementById('auditLogList');
-  if (!auditLogList) return;
-
-  const entries = Array.isArray(state.auditLog) ? state.auditLog.slice(0, 6) : [];
-  auditLogList.innerHTML = entries.map(entry => `
-    <div class="audit-item">
-      <div>
-        <strong>${escapeHtml(entry.action)}</strong>
-        <small>${escapeHtml(entry.actor)} • ${escapeHtml(entry.role)} • ${escapeHtml(entry.details)}</small>
-        <small>${escapeHtml(new Date(entry.time).toLocaleString())}</small>
-      </div>
-      <span class="tag">${escapeHtml(entry.role)}</span>
-    </div>
-  `).join('') || '<p class="status-message">No activity recorded yet.</p>';
-}
-
-function syncAccessPermissions() {
-  const ownerOnlyPanels = document.querySelectorAll('[data-owner-only]');
-  const canAccessOwnerSettings = isOwner();
-
-  ownerOnlyPanels.forEach(panel => {
-    if (panel) {
-      panel.classList.toggle('hidden', !canAccessOwnerSettings);
-    }
-  });
-}
-
-function clearMessage(elementId) {
-  const msg = document.getElementById(elementId);
-  if (msg) {
-    msg.textContent = '';
-    msg.classList.remove('error', 'success');
-  }
-}
-
-function showMessage(elementId, message, type) {
-  const msg = document.getElementById(elementId);
-  if (!msg) return;
-  msg.textContent = message;
-  msg.classList.remove('error', 'success');
-  if (type) msg.classList.add(type);
-}
-
-function showAuthScreen() {
-  const appShell = document.getElementById('appShell');
-  const authOverlay = document.getElementById('authOverlay');
-  if (appShell) appShell.classList.add('hidden');
-  if (authOverlay) authOverlay.classList.remove('hidden');
+function renderNavBadge() {
+  const badge = document.getElementById('navBadge');
+  if (badge) badge.textContent = '';
 }
 
 function showAppScreen() {
@@ -409,258 +157,53 @@ function showAppScreen() {
   if (authOverlay) authOverlay.classList.add('hidden');
 }
 
-function renderAll() {
-  ensureSeedData();
-  const activeUser = getActiveUser();
-  if (!activeUser) {
-    showAuthScreen();
-    return;
-  }
+function setupStockForm() {
+  const form = document.getElementById('stockAdjustForm');
+  if (!form) return;
 
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const msg = document.getElementById('stockMessage');
+    if (msg) {
+      msg.textContent = 'Saving stock changes to the database is the next step. Nothing was changed.';
+      msg.classList.remove('success');
+      msg.classList.add('error');
+    }
+  });
+}
+
+function renderAll() {
   showAppScreen();
-  renderCurrentUser();
   renderDate();
   renderStatCards();
   renderRecentSales();
   renderAlerts();
-  renderNavBadge();
   renderInventoryTable();
   populateProductSelect();
-  renderAuditLog();
-  syncAccessPermissions();
+  renderNavBadge();
 }
 
-function loginUser(username, pinOrPassword) {
-  const trimmedUser = String(username || '').trim();
-  const trimmedInput = String(pinOrPassword || '').trim();
-  const user = state.users.find(item => item.username.toLowerCase() === trimmedUser.toLowerCase());
-
-  if (!user) {
-    showMessage('authError', 'Incorrect username or PIN/password. Please try again.', 'error');
-    return;
+async function loadData() {
+  try {
+    const [products, sales] = await Promise.all([
+      fetch('products_json.php').then(r => r.json()),
+      fetch('sales_json.php').then(r => r.json())
+    ]);
+    state.products = Array.isArray(products) ? products : [];
+    state.sales = Array.isArray(sales) ? sales : [];
+  } catch (err) {
+    console.error('Could not load data from database:', err);
   }
-
-  const matchedPin = userPinMatches(user, trimmedInput);
-  const matchedPassword = userPasswordMatches(user, trimmedInput);
-
-  if (!matchedPin && !matchedPassword) {
-    showMessage('authError', 'Incorrect username or PIN/password. Please try again.', 'error');
-    return;
-  }
-
-  setActiveUser(user);
-  clearMessage('authError');
-  addAuditEntry('Login', `${user.fullName} signed in`);
   renderAll();
 }
 
-function logoutUser() {
-  const currentUser = getActiveUser();
-  if (currentUser) {
-    addAuditEntry('Logout', `${currentUser.fullName} signed out`);
-  }
-  setActiveUser(null);
-  clearMessage('authError');
-  showAuthScreen();
-}
-
-function secureAction(promptText, callback) {
-  const modal = document.getElementById('secureModal');
-  const prompt = document.getElementById('securePrompt');
-  const input = document.getElementById('confirmPassword');
-  const error = document.getElementById('secureError');
-  const form = document.getElementById('secureForm');
-
-  if (prompt) prompt.textContent = promptText;
-  if (input) {
-    input.value = '';
-    input.focus();
-  }
-  if (error) error.textContent = '';
-
-  state.pendingAction = callback;
-
-  if (modal) modal.classList.remove('hidden');
-  if (form) form.onsubmit = function (event) {
-    event.preventDefault();
-    const currentUser = getActiveUser();
-    const enteredPassword = String(input.value || '').trim();
-    const valid = currentUser && userPasswordMatches(currentUser, enteredPassword);
-
-    if (!valid) {
-      if (error) error.textContent = 'Incorrect password. Please try again.';
-      return;
-    }
-
-    if (modal) modal.classList.add('hidden');
-    if (state.pendingAction) {
-      state.pendingAction();
-      state.pendingAction = null;
-    }
-  };
-}
-
-function createWorkerAccount(event) {
-  event.preventDefault();
-  const currentUser = getActiveUser();
-
-  if (!currentUser || currentUser.role !== 'Owner') {
-    showMessage('workerMessage', 'Only the owner can create worker credentials.', 'error');
-    return;
-  }
-
-  const fullName = String(document.getElementById('workerName').value || '').trim();
-  const username = String(document.getElementById('workerUsername').value || '').trim();
-  const pin = String(document.getElementById('workerPin').value || '').trim();
-  const password = String(document.getElementById('workerPassword').value || '').trim();
-
-  if (!fullName || !username || !pin || !password) {
-    showMessage('workerMessage', 'Please complete all worker details.', 'error');
-    return;
-  }
-
-  if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
-    showMessage('workerMessage', 'PIN must be 4 to 6 digits only.', 'error');
-    return;
-  }
-
-  if (password.length < 6) {
-    showMessage('workerMessage', 'Password must be at least 6 characters long.', 'error');
-    return;
-  }
-
-  const existingUsername = state.users.some(user => user.username.toLowerCase() === username.toLowerCase());
-  if (existingUsername) {
-    showMessage('workerMessage', 'This username already exists. Please choose another one.', 'error');
-    return;
-  }
-
-  secureAction('Create worker account? Enter your secure password to confirm.', () => {
-    const worker = {
-      id: `worker-${Date.now()}`,
-      fullName,
-      role: 'Worker',
-      username,
-      pin,
-      password: normalizeUserPassword(password),
-      isOwner: false
-    };
-
-    state.users.push(worker);
-    saveJson(STORAGE_KEYS.users, state.users);
-    addAuditEntry('New worker created', `${currentUser.fullName} created ${fullName} as worker`);
-
-    document.getElementById('workerForm').reset();
-    showMessage('workerMessage', `Worker account created for ${worker.fullName}.`, 'success');
-  });
-}
-
-function submitStockAdjustment(event) {
-  event.preventDefault();
-  const currentUser = getActiveUser();
-  if (!currentUser) return;
-
-  const productId = document.getElementById('stockProduct').value;
-  const qty = Number(document.getElementById('stockQty').value);
-  const reason = document.getElementById('stockReason').value;
-  const note = String(document.getElementById('stockNote').value || '').trim();
-
-  if (!productId || Number.isNaN(qty) || qty === 0) {
-    showMessage('stockMessage', 'Please select a product and enter a valid quantity change.', 'error');
-    return;
-  }
-
-  const product = state.products.find(item => item.id === productId);
-  if (!product) {
-    showMessage('stockMessage', 'Selected product could not be found.', 'error');
-    return;
-  }
-
-  const newStock = Number(product.stock || 0) + qty;
-  if (newStock < 0) {
-    showMessage('stockMessage', 'Stock cannot go below zero.', 'error');
-    return;
-  }
-
-  secureAction('Confirm stock update. Enter your password to continue.', () => {
-    product.stock = newStock;
-    saveJson(STORAGE_KEYS.products, state.products);
-
-    const summary = `${qty > 0 ? '+' : ''}${qty} ${product.name} • ${reason}${note ? ' — ' + note : ''}`;
-    state.sales.unshift({
-      product: product.name,
-      customer: currentUser.fullName,
-      qty: Math.abs(qty),
-      amount: 0,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
-
-    saveJson(STORAGE_KEYS.sales, state.sales);
-    addAuditEntry('Stock adjusted', `${currentUser.fullName} ${summary}`);
-    document.getElementById('stockAdjustForm').reset();
-    showMessage('stockMessage', `Inventory updated successfully: ${summary}`, 'success');
-    renderAll();
-  });
-}
-
-function attachEventListeners() {
-  const loginForm = document.getElementById('loginForm');
-  const signOutBtn = document.getElementById('signOutBtn');
-  const stockAdjustForm = document.getElementById('stockAdjustForm');
-  const workerForm = document.getElementById('workerForm');
-  const quickStockBtn = document.getElementById('quickStockBtn');
-  const cancelConfirm = document.getElementById('cancelConfirm');
-
-  if (loginForm) {
-    loginForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const username = document.getElementById('loginUsername').value;
-      const credential = document.getElementById('loginPin').value;
-      loginUser(username, credential);
-    });
-  }
-
-  if (signOutBtn) {
-    signOutBtn.addEventListener('click', logoutUser);
-  }
-
-  if (stockAdjustForm) {
-    stockAdjustForm.addEventListener('submit', submitStockAdjustment);
-  }
-
-  if (workerForm) {
-    workerForm.addEventListener('submit', createWorkerAccount);
-  }
-
-  if (quickStockBtn) {
-    quickStockBtn.addEventListener('click', () => {
-      const productSelect = document.getElementById('stockProduct');
-      if (productSelect && productSelect.options.length) {
-        productSelect.focus();
-        productSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    });
-  }
-
-  if (cancelConfirm) {
-    cancelConfirm.addEventListener('click', () => {
-      const secureModal = document.getElementById('secureModal');
-      if (secureModal) secureModal.classList.add('hidden');
-      state.pendingAction = null;
-      const input = document.getElementById('confirmPassword');
-      if (input) input.value = '';
-    });
-  }
-}
-
-function initApp() {
-  ensureSeedData();
-  attachEventListeners();
-  renderAll();
+function start() {
+  setupStockForm();
+  loadData();
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
+  document.addEventListener('DOMContentLoaded', start);
 } else {
-  initApp();
+  start();
 }
