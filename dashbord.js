@@ -165,25 +165,28 @@ function setupStockForm() {
     event.preventDefault();
     const msg = document.getElementById('stockMessage');
     const productId = document.getElementById('stockProduct').value;
-    const qty = Number(document.getElementById('stockQty').value);
+    const qty = document.getElementById('stockQty').value;
 
-    const body = new URLSearchParams({ product_id: productId, qty: String(qty) });
+    const body = new FormData();
+    body.append('product_id', productId);
+    body.append('qty', qty);
 
     try {
-      const res = await fetch('stock_adjust.php', { method: 'POST', body });
-      const data = await res.json();
+      const res = await fetch('adjust_stock.php', { method: 'POST', body });
+      const result = await res.json();
 
       if (msg) {
-        msg.textContent = data.message;
+        msg.textContent = result.message;
         msg.classList.remove('success', 'error');
-        msg.classList.add(data.ok ? 'success' : 'error');
+        msg.classList.add(result.success ? 'success' : 'error');
       }
 
-      if (data.ok) {
+      if (result.success) {
         form.reset();
         await loadData();
       }
     } catch (err) {
+      console.error('Stock update failed:', err);
       if (msg) {
         msg.textContent = 'Could not reach the server. Please try again.';
         msg.classList.remove('success');
