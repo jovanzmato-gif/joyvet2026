@@ -1,5 +1,4 @@
-// Joyvet dashboard: reads live data from the database.
-// No sample data is stored in the browser.
+// Joyvet dashboard: reads and saves live data through the database.
 
 const state = {
   products: [],
