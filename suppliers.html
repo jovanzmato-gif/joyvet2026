@@ -4,9 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JoyVet Drug Shop — Suppliers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dashboard-body">
+
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -16,34 +19,116 @@
           <div class="brand-sub">Drug Shop</div>
         </div>
       </div>
+
+      <div class="user-panel">
+        <div class="user-avatar" id="userAvatar">??</div>
+        <div>
+          <div id="currentUserName" class="user-name">Not signed in</div>
+          <div id="currentUserRole" class="user-role"></div>
+        </div>
+      </div>
+
       <nav class="nav-list">
         <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
         <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
-        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders</a>
-        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+        <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
+        <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+        <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+        <a class="nav-link" href="attendance.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
+        <a class="nav-link" href="staff.html"><span class="nav-icon">👥</span>Staff</a>
         <a class="nav-link active" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
       </nav>
-    </aside>
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <h1 class="topbar-title">Suppliers</h1>
-          <p class="topbar-sub">Key vendors and contacts</p>
+
+      <div class="sidebar-footer">
+        <button id="signOutBtn" class="btn-ghost btn-small" type="button">Sign Out</button>
+        <div class="footer-meta">
+          <div>Designed by Matovu Jovan</div>
+          <div>Support info: Contact Matovu Jovan on 0743901225</div>
         </div>
-      </header>
-      <section class="panel">
-        <table class="data-table">
-          <thead>
-            <tr><th>Supplier</th><th>Product</th><th>Phone</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>AgroVet East Africa</td><td>Vaccines</td><td>+256 772 111 222</td><td>Active</td></tr>
-            <tr><td>Lakeview Feeds</td><td>Poultry feed</td><td>+256 774 333 444</td><td>Active</td></tr>
-            <tr><td>Guardian Pharma</td><td>Medicines</td><td>+256 705 555 666</td><td>Review</td></tr>
-          </tbody>
-        </table>
-      </section>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="supGate" class="panel">
+        <h2>Sign in required</h2>
+        <p class="status-message">Please sign in on the dashboard first, then come back to this page.</p>
+        <a class="btn-primary" href="index.html">Go to sign in</a>
+      </div>
+
+      <div id="supMain" class="hidden">
+        <header class="topbar">
+          <div>
+            <h1 class="topbar-title">Suppliers</h1>
+            <p class="topbar-sub" id="supSub"></p>
+          </div>
+          <div class="topbar-actions">
+            <button id="refreshBtn" class="btn-ghost" type="button">Refresh</button>
+          </div>
+        </header>
+
+        <section class="stat-grid">
+          <div class="stat-card">
+            <div class="icon">🚚</div>
+            <div class="num" id="supCount">0</div>
+            <div class="label">Suppliers</div>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>All suppliers</h2>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Name</th><th>Phone</th><th>Supplies</th><th id="actionHead" class="hidden"></th></tr>
+                </thead>
+                <tbody id="supBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel owner-panel hidden" id="ownerPanel">
+            <div class="panel-head">
+              <h2 id="formTitle">Add supplier</h2>
+            </div>
+
+            <form id="supForm" class="inventory-form">
+              <input type="hidden" id="editId" value="">
+
+              <div class="form-group">
+                <label for="supName">Supplier name</label>
+                <input id="supName" type="text" required>
+              </div>
+
+              <div class="form-group">
+                <label for="supPhone">Contact phone</label>
+                <input id="supPhone" type="text" placeholder="e.g. 0700 000 000">
+              </div>
+
+              <div class="form-group">
+                <label for="supSupplies">What they supply</label>
+                <input id="supSupplies" type="text" placeholder="e.g. Vaccines, feeds">
+              </div>
+
+              <div class="form-group">
+                <label for="ownerPassword">Your password (to confirm)</label>
+                <input id="ownerPassword" type="password" required>
+              </div>
+
+              <button class="btn-primary full-width" type="submit" id="saveBtn">Save Supplier</button>
+              <button class="btn-ghost full-width" type="button" id="cancelEditBtn" class="hidden">Cancel edit</button>
+              <div id="supMessage" class="status-message"></div>
+            </form>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
+
+  <script src="suppliers.js"></script>
 </body>
 </html>

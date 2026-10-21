@@ -1,89 +1,128 @@
-const stockItems = [
-  {name: 'Amoxicillin Inj. 100ml', stock: 6, lowStockThreshold: 10, expiryDate: '2026-10-05'},
-  {name: 'Oxytetracycline 20% LA', stock: 14, lowStockThreshold: 10, expiryDate: '2026-12-01'},
-  {name: 'ECF Vaccine (Muguga)', stock: 3, lowStockThreshold: 5, expiryDate: '2026-09-30'},
-  {name: 'Broiler Starter Feed 70kg', stock: 22, lowStockThreshold: 15, expiryDate: '2027-03-10'},
-  {name: 'Dewormer (Albendazole)', stock: 8, lowStockThreshold: 12, expiryDate: '2026-11-18'},
-  {name: 'Mineral Lick Supplement', stock: 40, lowStockThreshold: 20, expiryDate: '2027-01-15'},
-  {name: 'Wound Spray 200ml', stock: 0, lowStockThreshold: 4, expiryDate: '2027-02-14'},
-];
+// JoyVet stock and expiry: shows low stock, out-of-stock and expiring products from the database.
 
-function daysUntil(dateStr) {
-  const today = new Date();
-  const target = new Date(dateStr);
-  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+const items = [];
+
+const $ = id => document.getElementById(id);
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
-function getAlerts() {
-  const lowStock = stockItems.filter(item => item.stock < item.lowStockThreshold);
-  const expiringSoon = stockItems.filter(item => daysUntil(item.expiryDate) <= 30);
-  return [
-    ...lowStock.map(item => ({
-      name: item.name,
-      meta: `${item.stock} left (reorder below ${item.lowStockThreshold})`,
-      tag: 'LOW STOCK',
-      tagClass: 'tag-low'
-    })),
-    ...expiringSoon.map(item => ({
-      name: item.name,
-      meta: `Expires in ${daysUntil(item.expiryDate)} day(s) — ${item.expiryDate}`,
-      tag: 'EXPIRING',
-      tagClass: 'tag-expiry'
-    }))
-  ];
-}
-
-function renderStats() {
-  const lowStock = stockItems.filter(item => item.stock < item.lowStockThreshold).length;
-  const expiringSoon = stockItems.filter(item => daysUntil(item.expiryDate) <= 30).length;
-  const cards = [
-    {icon: '📦', label: 'Products', num: stockItems.length},
-    {icon: '⚠️', label: 'Low Stock', num: lowStock, cls: 'alert'},
-    {icon: '⏳', label: 'Expiring Soon', num: expiringSoon, cls: 'amber'},
-    {icon: '✅', label: 'Healthy', num: stockItems.filter(item => item.stock >= item.lowStockThreshold && daysUntil(item.expiryDate) > 30).length}
-  ];
-
-  const container = document.getElementById('stockStats');
-  if (!container) return;
-
-  container.innerHTML = cards.map(c => `
-    <div class="stat-card ${c.cls || ''}">
-      <div class="icon">${c.icon}</div>
-      <div class="num">${c.num}</div>
-      <div class="label">${c.label}</div>
-    </div>
-  `).join('');
-}
-
-function renderAlerts() {
-  const list = document.getElementById('alertsList');
-  if (!list) return;
-
-  const alerts = getAlerts();
-  list.innerHTML = alerts.map(item => `
-    <div class="alert-item">
-      <div>
-        <div class="alert-name">${item.name}</div>
-        <div class="alert-meta">${item.meta}</div>
-      </div>
-      <span class="alert-tag ${item.tagClass}">${item.tag}</span>
-    </div>
-  `).join('') || '<p style="font-size:12.5px; color:var(--muted);">No alerts right now.</p>';
-}
-
-function renderNavBadge() {
-  const badge = document.getElementById('navBadge');
-  if (!badge) return;
+async function api(url, method = 'GET', body = null) {
   try {
-    const raw = localStorage.getItem('joyvet_orders');
-    const orders = raw ? JSON.parse(raw) : [];
-    const pending = Array.isArray(orders) ? orders.filter(o => o.status === 'pending').length : 0;
-    badge.textContent = pending > 0 ? String(pending) : '';
-  } catch (error) {
-    badge.textContent = '';
+    const res = await fetch(url, { method, body });
+    return await res.json();
+  } catch (err) {
+    console.error('Request failed:', url, err);
+    return { success: false, message: 'Could not reach the server. Please try again.' };
   }
 }
 
-renderStats();
-renderAlerts();
-renderNavBadge();
+// Returns a short status label and a CSS class for the status pill
+function statusFor(item) {
+  if (item.out_of_stock) return { label: 'Out of stock', cls: 'status-done' };
+  if (item.expired) return { label: 'Expired', cls: 'status-done' };
+  if (item.expiring_soon) return { label: 'Expiring soon', cls: 'status-done' };
+  if (item.low_stock) return { label: 'Low stock', cls: 'status-done' };
+  return { label: 'Healthy', cls: 'status-active' };
+}
+
+function matchesFilter(item, filter) {
+  switch (filter) {
+    case 'low': return item.low_stock;
+    case 'out': return item.out_of_stock;
+    case 'expiring': return item.expiring_soon;
+    case 'expired': return item.expired;
+    default: return true;
+  }
+}
+
+function updateCounts() {
+  $('lowCount').textContent = items.filter(i => i.low_stock).length;
+  $('outCount').textContent = items.filter(i => i.out_of_stock).length;
+  $('expiringCount').textContent = items.filter(i => i.expiring_soon).length;
+  $('expiredCount').textContent = items.filter(i => i.expired).length;
+}
+
+function render() {
+  const filter = $('filterSelect').value;
+  const term = $('searchBox').value.trim().toLowerCase();
+
+  const shown = items.filter(item => {
+    if (!matchesFilter(item, filter)) return false;
+    if (!term) return true;
+    return String(item.name).toLowerCase().includes(term)
+      || String(item.category || '').toLowerCase().includes(term);
+  });
+
+  $('stockBody').innerHTML = shown.map(item => {
+    const status = statusFor(item);
+    const daysText = item.days_left === null ? '—' : item.days_left;
+    const expiryText = item.expiry_date || '—';
+
+    return `
+      <tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(item.category)}</td>
+        <td>${escapeHtml(item.stock)}</td>
+        <td>${escapeHtml(item.threshold)}</td>
+        <td>${escapeHtml(expiryText)}</td>
+        <td>${escapeHtml(daysText)}</td>
+        <td><span class="status-pill ${status.cls}">${escapeHtml(status.label)}</span></td>
+      </tr>`;
+  }).join('') ||
+    '<tr><td colspan="7">No products match this view.</td></tr>';
+}
+
+async function loadItems() {
+  const data = await api('stock_expiry_json.php');
+  if (!Array.isArray(data)) {
+    $('stockBody').innerHTML = '<tr><td colspan="7">Could not load products. Please refresh.</td></tr>';
+    return;
+  }
+  items.length = 0;
+  items.push(...data);
+  updateCounts();
+  render();
+}
+
+async function signOut() {
+  await api('logout.php', 'POST');
+  window.location.href = 'index.html';
+}
+
+async function start() {
+  const me = await api('me.php');
+
+  if (!me.success) {
+    $('stockGate').classList.remove('hidden');
+    $('stockMain').classList.add('hidden');
+    return;
+  }
+
+  $('stockGate').classList.add('hidden');
+  $('stockMain').classList.remove('hidden');
+
+  const initials = me.user.fullName.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  $('userAvatar').textContent = initials;
+  $('currentUserName').textContent = me.user.fullName;
+  $('currentUserRole').textContent = me.user.role;
+
+  $('filterSelect').addEventListener('change', render);
+  $('searchBox').addEventListener('input', render);
+  $('refreshBtn').addEventListener('click', loadItems);
+  $('signOutBtn').addEventListener('click', signOut);
+
+  await loadItems();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', start);
+} else {
+  start();
+}

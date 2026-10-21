@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyVet Drug Shop — Staff / Attendance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🐾</div>
+        <div>
+          <div class="brand-name">JoyVet</div>
+          <div class="brand-sub">Drug Shop</div>
+        </div>
+      </div>
+
+      <div class="user-panel">
+        <div class="user-avatar" id="userAvatar">??</div>
+        <div>
+          <div id="currentUserName" class="user-name">Not signed in</div>
+          <div id="currentUserRole" class="user-role"></div>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
+        <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
+        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+        <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
+        <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+        <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+        <a class="nav-link active" href="attendance.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
+        <a class="nav-link" href="staff.html"><span class="nav-icon">👥</span>Staff</a>
+        <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="signOutBtn" class="btn-ghost btn-small" type="button">Sign Out</button>
+        <div class="footer-meta">
+          <div>Designed by Matovu Jovan</div>
+          <div>Support info: Contact Matovu Jovan on 0743901225</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="attGate" class="panel">
+        <h2>Sign in required</h2>
+        <p class="status-message">Please sign in on the dashboard first, then come back to this page.</p>
+        <a class="btn-primary" href="index.html">Go to sign in</a>
+      </div>
+
+      <div id="attMain" class="hidden">
+        <header class="topbar">
+          <div>
+            <h1 class="topbar-title">Staff / Attendance</h1>
+            <p class="topbar-sub" id="attSub"></p>
+          </div>
+          <div class="topbar-actions">
+            <button id="refreshBtn" class="btn-ghost" type="button">Refresh</button>
+          </div>
+        </header>
+
+        <section class="content-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>My shift</h2>
+            </div>
+            <p class="status-message" id="shiftStatus">Checking your shift...</p>
+            <div class="topbar-actions" style="margin-top: 12px;">
+              <button id="clockInBtn" class="btn-primary" type="button">Clock In</button>
+              <button id="clockOutBtn" class="btn-ghost" type="button">Clock Out</button>
+            </div>
+            <div id="shiftMessage" class="status-message"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Today</h2>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="activeCount">0</div>
+              <div class="label">Currently on shift</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2 id="recordsTitle">Attendance records</h2>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Clock in</th>
+                  <th>Clock out</th>
+                  <th>Hours</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="attBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="attendance.js"></script>
+</body>
+</html>

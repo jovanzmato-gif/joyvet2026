@@ -1,79 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JoyVet Drug Shop — Reports</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyVet Drug Shop — Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    @media print {
+      .sidebar, .report-controls, .topbar-actions { display: none !important; }
+      .app-shell { display: block; }
+      .main { padding: 0; }
+      .panel, .stat-card { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
 </head>
-<body>
+<body class="dashboard-body">
 
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">🐾</div>
-      <div><div class="brand-name">JoyVet</div><div class="brand-sub">Drug Shop</div></div>
-    </div>
-    <nav class="nav-list">
-      <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
-      <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
-      <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
-      <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
-      <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
-      <a class="nav-link" href="customer-portal.html"><span class="nav-icon">👥</span>Customers</a>
-      <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
-      <a class="nav-link" href="attendence.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
-      <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
-      <a class="nav-link active" href="report.html"><span class="nav-icon">📈</span>Reports</a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="owner-chip">
-        <div class="owner-avatar">YJ</div>
-        <div><div class="owner-name">Yiga Josephat</div><div class="owner-role">Owner</div></div>
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <div>
-        <h1 class="topbar-title">Reports</h1>
-        <p class="topbar-sub">Sales performance across time and staff</p>
-      </div>
-      <div class="period-toggle" id="periodToggle">
-        <button class="period-btn active" data-period="today" onclick="setPeriod('today')">Today</button>
-        <button class="period-btn" data-period="month" onclick="setPeriod('month')">This Month</button>
-        <button class="period-btn" data-period="year" onclick="setPeriod('year')">This Year</button>
-      </div>
-    </header>
-
-    <section class="stat-grid" id="reportStats"></section>
-
-    <section class="content-grid">
-      <div class="panel">
-        <div class="panel-head"><h2>Top Selling Products</h2></div>
-        <div id="topProducts"></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🐾</div>
+        <div>
+          <div class="brand-name">JoyVet</div>
+          <div class="brand-sub">Drug Shop</div>
+        </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-head"><h2>Staff Performance</h2></div>
-        <table class="data-table">
-          <thead><tr><th>Worker</th><th>Sales</th><th>Total</th></tr></thead>
-          <tbody id="staffPerformanceBody"></tbody>
-        </table>
+      <div class="user-panel">
+        <div class="user-avatar" id="userAvatar">??</div>
+        <div>
+          <div id="currentUserName" class="user-name">Not signed in</div>
+          <div id="currentUserRole" class="user-role"></div>
+        </div>
       </div>
-    </section>
 
-    <section class="panel" style="margin-top:18px;">
-      <div class="panel-head"><h2>Payment Method Breakdown</h2></div>
-      <div id="paymentBreakdown"></div>
-    </section>
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
+        <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
+        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+        <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
+        <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+        <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+        <a class="nav-link" href="attendance.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
+        <a class="nav-link" href="staff.html"><span class="nav-icon">👥</span>Staff</a>
+        <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+        <a class="nav-link active" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+      </nav>
 
-  </main>
-</div>
+      <div class="sidebar-footer">
+        <button id="signOutBtn" class="btn-ghost btn-small" type="button">Sign Out</button>
+        <div class="footer-meta">
+          <div>Designed by Matovu Jovan</div>
+          <div>Support info: Contact Matovu Jovan on 0743901225</div>
+        </div>
+      </div>
+    </aside>
 
-<script src="report.js"></script>
+    <main class="main">
+      <div id="repGate" class="panel">
+        <h2>Sign in required</h2>
+        <p class="status-message">Please sign in on the dashboard first, then come back to this page.</p>
+        <a class="btn-primary" href="index.html">Go to sign in</a>
+      </div>
+
+      <div id="repDenied" class="panel hidden">
+        <h2>Owner only</h2>
+        <p class="status-message">Reports show money and stock figures, so only the owner can open this page.</p>
+      </div>
+
+      <div id="repMain" class="hidden">
+        <header class="topbar">
+          <div>
+            <h1 class="topbar-title">Reports</h1>
+            <p class="topbar-sub" id="repSub">Sales, stock, staff hours and orders for any date range.</p>
+          </div>
+          <div class="topbar-actions">
+            <button id="printBtn" class="btn-ghost" type="button">Print</button>
+          </div>
+        </header>
+
+        <section class="panel report-controls">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="fromDate">From</label>
+              <input id="fromDate" type="date">
+            </div>
+            <div class="form-group">
+              <label for="toDate">To</label>
+              <input id="toDate" type="date">
+            </div>
+          </div>
+          <button id="runBtn" class="btn-primary full-width" type="button">Run Report</button>
+          <div id="repMessage" class="status-message"></div>
+        </section>
+
+        <section class="stat-grid" style="margin-top: 20px;">
+          <div class="stat-card"><div class="icon">🧾</div><div class="num" id="sCount">0</div><div class="label">Sales in period</div></div>
+          <div class="stat-card"><div class="icon">💰</div><div class="num" id="sTotal">UGX 0</div><div class="label">Sales value</div></div>
+          <div class="stat-card"><div class="icon">📦</div><div class="num" id="stockValue">UGX 0</div><div class="label">Stock value now</div></div>
+          <div class="stat-card alert"><div class="icon">⚠️</div><div class="num" id="stockLow">0</div><div class="label">Low stock now</div></div>
+          <div class="stat-card amber"><div class="icon">⏳</div><div class="num" id="stockExpiring">0</div><div class="label">Expiring in 30 days</div></div>
+          <div class="stat-card alert"><div class="icon">❌</div><div class="num" id="stockExpired">0</div><div class="label">Expired now</div></div>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel">
+            <div class="panel-head"><h2>Sales by payment</h2></div>
+            <table class="data-table">
+              <thead><tr><th>Method</th><th>Sales</th><th>Value</th></tr></thead>
+              <tbody id="paymentBody"></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>Top products by value</h2></div>
+            <table class="data-table">
+              <thead><tr><th>Product</th><th>Qty</th><th>Value</th></tr></thead>
+              <tbody id="topBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel">
+            <div class="panel-head"><h2>Staff hours</h2></div>
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Shifts</th><th>Hours</th></tr></thead>
+              <tbody id="hoursBody"></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>Orders in period</h2></div>
+            <table class="data-table">
+              <thead><tr><th>Status</th><th>Orders</th></tr></thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="report.js"></script>
 </body>
 </html>

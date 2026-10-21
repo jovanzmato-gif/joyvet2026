@@ -1,9 +1,15 @@
-// Joyvet dashboard: reads and saves live data through the database.
+
+// JoyVet dashboard: sign-in, sales, stock, workers and audit trail all use the database.
 
 const state = {
+  user: null,
   products: [],
-  sales: []
+  sales: [],
+  auditLog: [],
+  pending: null
 };
+
+const $ = id => document.getElementById(id);
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -25,34 +31,87 @@ function daysUntil(dateStr) {
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 }
 
-function getLowStockItems() {
+function lowStockItems() {
   return state.products.filter(p => Number(p.stock || 0) < Number(p.lowStockThreshold || 0));
 }
 
-function getExpiringSoonItems(windowDays = 30) {
+function expiringItems(windowDays = 30) {
   return state.products.filter(p => {
     const d = daysUntil(p.expiryDate);
     return d !== null && d <= windowDays;
   });
 }
 
+function isOwner() {
+  return !!state.user && state.user.role === 'Owner';
+}
+
+// Calls a PHP endpoint and always returns an object.
+async function api(url, method = 'GET', body = null) {
+  try {
+    const res = await fetch(url, { method, body });
+    return await res.json();
+  } catch (err) {
+    console.error('Request failed:', url, err);
+    return { success: false, message: 'Could not reach the server. Please try again.' };
+  }
+}
+
+async function getList(url) {
+  const data = await api(url);
+  return Array.isArray(data) ? data : [];
+}
+
+function showStatus(id, text, ok) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('success', 'error');
+  el.classList.add(ok ? 'success' : 'error');
+}
+
+function showLogin() {
+  $('appShell').classList.add('hidden');
+  $('authOverlay').classList.remove('hidden');
+}
+
+function showApp() {
+  $('authOverlay').classList.add('hidden');
+  $('appShell').classList.remove('hidden');
+}
+
+function renderCurrentUser() {
+  const u = state.user;
+  if (!u) return;
+  const initials = u.fullName.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  if ($('userAvatar')) $('userAvatar').textContent = initials;
+  if ($('currentUserName')) $('currentUserName').textContent = u.fullName;
+  if ($('currentUserRole')) $('currentUserRole').textContent = u.role;
+}
+
+function syncAccessPermissions() {
+  document.querySelectorAll('[data-owner-only]').forEach(panel => {
+    panel.classList.toggle('hidden', !isOwner());
+  });
+}
+
 function renderDate() {
-  const el = document.getElementById('todayDate');
+  const el = $('todayDate');
   if (!el) return;
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   el.textContent = 'Welcome back — ' + new Date().toLocaleDateString('en-UG', options);
 }
 
 function renderStatCards() {
-  const grid = document.getElementById('statGrid');
+  const grid = $('statGrid');
   if (!grid) return;
 
   const total = state.sales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
   const cards = [
     { icon: '💰', label: 'Recent Sales Total', num: formatUGX(total), cls: '' },
     { icon: '💊', label: 'Total Products', num: state.products.length, cls: '' },
-    { icon: '⚠️', label: 'Low Stock Items', num: getLowStockItems().length, cls: 'alert' },
-    { icon: '⏳', label: 'Expiring Soon', num: getExpiringSoonItems().length, cls: 'amber' }
+    { icon: '⚠️', label: 'Low Stock Items', num: lowStockItems().length, cls: 'alert' },
+    { icon: '⏳', label: 'Expiring Soon', num: expiringItems().length, cls: 'amber' }
   ];
 
   grid.innerHTML = cards.map(c => `
@@ -64,7 +123,7 @@ function renderStatCards() {
 }
 
 function renderRecentSales() {
-  const body = document.getElementById('recentSalesBody');
+  const body = $('recentSalesBody');
   if (!body) return;
 
   body.innerHTML = state.sales.map(s => `
@@ -79,17 +138,17 @@ function renderRecentSales() {
 }
 
 function renderAlerts() {
-  const list = document.getElementById('alertsList');
+  const list = $('alertsList');
   if (!list) return;
 
-  const low = getLowStockItems().map(p => ({
+  const low = lowStockItems().map(p => ({
     name: p.name,
     meta: `${p.stock} left (reorder below ${p.lowStockThreshold})`,
     tag: 'LOW STOCK',
     tagClass: 'tag-low'
   }));
 
-  const expiring = getExpiringSoonItems().map(p => ({
+  const expiring = expiringItems().map(p => ({
     name: p.name,
     meta: `Expires in ${daysUntil(p.expiryDate)} day(s) — ${p.expiryDate}`,
     tag: 'EXPIRING',
@@ -108,7 +167,7 @@ function renderAlerts() {
 }
 
 function renderInventoryTable() {
-  const body = document.getElementById('inventoryTableBody');
+  const body = $('inventoryTableBody');
   if (!body) return;
 
   body.innerHTML = state.products.map(p => {
@@ -137,92 +196,214 @@ function renderInventoryTable() {
 }
 
 function populateProductSelect() {
-  const select = document.getElementById('stockProduct');
+  const select = $('stockProduct');
   if (!select) return;
 
   select.innerHTML = state.products.map(p => `
     <option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.stock)} units)</option>`).join('');
 }
 
-function renderNavBadge() {
-  const badge = document.getElementById('navBadge');
-  if (badge) badge.textContent = '';
-}
+function renderAuditLog() {
+  const list = $('auditLogList');
+  if (!list) return;
 
-function showAppScreen() {
-  const appShell = document.getElementById('appShell');
-  const authOverlay = document.getElementById('authOverlay');
-  if (appShell) appShell.classList.remove('hidden');
-  if (authOverlay) authOverlay.classList.add('hidden');
-}
-
-function setupStockForm() {
-  const form = document.getElementById('stockAdjustForm');
-  if (!form) return;
-
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    const msg = document.getElementById('stockMessage');
-    const productId = document.getElementById('stockProduct').value;
-    const qty = document.getElementById('stockQty').value;
-
-    const body = new FormData();
-    body.append('product_id', productId);
-    body.append('qty', qty);
-
-    try {
-      const res = await fetch('adjust_stock.php', { method: 'POST', body });
-      const result = await res.json();
-
-      if (msg) {
-        msg.textContent = result.message;
-        msg.classList.remove('success', 'error');
-        msg.classList.add(result.success ? 'success' : 'error');
-      }
-
-      if (result.success) {
-        form.reset();
-        await loadData();
-      }
-    } catch (err) {
-      console.error('Stock update failed:', err);
-      if (msg) {
-        msg.textContent = 'Could not reach the server. Please try again.';
-        msg.classList.remove('success');
-        msg.classList.add('error');
-      }
-    }
-  });
+  list.innerHTML = state.auditLog.map(e => `
+    <div class="audit-item">
+      <div>
+        <strong>${escapeHtml(e.action)}</strong>
+        <small>${escapeHtml(e.actor)} • ${escapeHtml(e.role)} • ${escapeHtml(e.details)}</small>
+        <small>${escapeHtml(e.time)}</small>
+      </div>
+      <span class="tag">${escapeHtml(e.role)}</span>
+    </div>`).join('') ||
+    '<p class="status-message">No activity recorded yet.</p>';
 }
 
 function renderAll() {
-  showAppScreen();
+  renderCurrentUser();
   renderDate();
   renderStatCards();
   renderRecentSales();
   renderAlerts();
   renderInventoryTable();
   populateProductSelect();
-  renderNavBadge();
+  renderAuditLog();
+  syncAccessPermissions();
 }
 
-async function loadData() {
-  try {
-    const [products, sales] = await Promise.all([
-      fetch('products_json.php').then(r => r.json()),
-      fetch('sales_json.php').then(r => r.json())
-    ]);
-    state.products = Array.isArray(products) ? products : [];
-    state.sales = Array.isArray(sales) ? sales : [];
-  } catch (err) {
-    console.error('Could not load data from database:', err);
-  }
+async function loadAll() {
+  const [products, sales, audit] = await Promise.all([
+    getList('products_json.php'),
+    getList('sales_json.php'),
+    getList('audit_json.php')
+  ]);
+  state.products = products;
+  state.sales = sales;
+  state.auditLog = audit;
   renderAll();
 }
 
-function start() {
+// Shows the password box; the action runs only when the password is entered.
+function askPassword(prompt, action) {
+  state.pending = action;
+  $('securePrompt').textContent = prompt;
+  $('confirmPassword').value = '';
+  $('secureError').textContent = '';
+  $('secureModal').classList.remove('hidden');
+  $('confirmPassword').focus();
+}
+
+function closeSecure() {
+  state.pending = null;
+  $('secureModal').classList.add('hidden');
+}
+
+async function confirmSecure(event) {
+  event.preventDefault();
+  if (!state.pending) {
+    closeSecure();
+    return;
+  }
+  const result = await state.pending($('confirmPassword').value);
+  if (result.success) {
+    closeSecure();
+  } else {
+    $('secureError').textContent = result.message;
+  }
+}
+
+function setupStockForm() {
+  const form = $('stockAdjustForm');
+  if (!form) return;
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+
+    const productId = $('stockProduct').value;
+    const qty = parseInt($('stockQty').value, 10);
+
+    if (!productId || Number.isNaN(qty) || qty === 0) {
+      showStatus('stockMessage', 'Select a product and enter a quantity other than zero.', false);
+      return;
+    }
+
+    const product = state.products.find(p => String(p.id) === String(productId));
+    const label = product ? product.name : 'this product';
+    const summary = `${qty > 0 ? '+' : ''}${qty} ${label}`;
+
+    askPassword(`Confirm stock update: ${summary}. Enter your password.`, async password => {
+      const body = new FormData();
+      body.append('product_id', productId);
+      body.append('qty', qty);
+      body.append('reason', $('stockReason').value);
+      body.append('note', $('stockNote').value.trim());
+      body.append('password', password);
+
+      const result = await api('adjust_stock.php', 'POST', body);
+      showStatus('stockMessage', result.message, result.success);
+
+      if (result.success) {
+        form.reset();
+        await loadAll();
+      }
+      return result;
+    });
+  });
+}
+
+function setupWorkerForm() {
+  const form = $('workerForm');
+  if (!form) return;
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+
+    const fullName = $('workerName').value.trim();
+    const username = $('workerUsername').value.trim();
+    const pin = $('workerPin').value.trim();
+    const password = $('workerPassword').value.trim();
+
+    if (!fullName || !username || !pin || !password) {
+      showStatus('workerMessage', 'Please complete all worker details.', false);
+      return;
+    }
+
+    askPassword(`Create worker account for ${fullName}? Enter your password to confirm.`, async ownerPassword => {
+      const body = new FormData();
+      body.append('full_name', fullName);
+      body.append('username', username);
+      body.append('pin', pin);
+      body.append('worker_password', password);
+      body.append('password', ownerPassword);
+
+      const result = await api('create_worker.php', 'POST', body);
+      showStatus('workerMessage', result.message, result.success);
+
+      if (result.success) {
+        form.reset();
+        await loadAll();
+      }
+      return result;
+    });
+  });
+}
+
+async function signIn(event) {
+  event.preventDefault();
+
+  const body = new FormData();
+  body.append('username', $('loginUsername').value.trim());
+  body.append('pin', $('loginPin').value.trim());
+
+  const result = await api('login.php', 'POST', body);
+  if (!result.success) {
+    $('authError').textContent = result.message;
+    return;
+  }
+
+  $('authError').textContent = '';
+  $('loginPin').value = '';
+  state.user = result.user;
+  showApp();
+  await loadAll();
+}
+
+async function signOut() {
+  await api('logout.php', 'POST');
+  state.user = null;
+  state.products = [];
+  state.sales = [];
+  state.auditLog = [];
+  showLogin();
+}
+
+async function checkSession() {
+  const result = await api('me.php');
+  if (result.success) {
+    state.user = result.user;
+    showApp();
+    await loadAll();
+  } else {
+    showLogin();
+  }
+}
+
+function setupEvents() {
+  $('loginForm').addEventListener('submit', signIn);
+  $('signOutBtn').addEventListener('click', signOut);
+  $('secureForm').addEventListener('submit', confirmSecure);
+  $('cancelConfirm').addEventListener('click', closeSecure);
+  $('quickStockBtn').addEventListener('click', () => {
+    $('stockAdjustForm').scrollIntoView({ behavior: 'smooth' });
+    $('stockQty').focus();
+  });
   setupStockForm();
-  loadData();
+  setupWorkerForm();
+}
+
+function start() {
+  setupEvents();
+  checkSession();
 }
 
 if (document.readyState === 'loading') {

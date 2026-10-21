@@ -1,63 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JoyVet Drug Shop — Orders</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyVet Drug Shop — Orders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dashboard-body">
 
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">🐾</div>
-      <div><div class="brand-name">JoyVet</div><div class="brand-sub">Drug Shop</div></div>
-    </div>
-    <nav class="nav-list">
-      <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
-      <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
-      <a class="nav-link active" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge">0</span></a>
-      <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
-      <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
-      <a class="nav-link" href="customer-portal.html"><span class="nav-icon">👥</span>Customers</a>
-      <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
-      <a class="nav-link" href="attendence.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
-      <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
-      <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="owner-chip">
-        <div class="owner-avatar">YJ</div>
-        <div><div class="owner-name">Yiga Josephat</div><div class="owner-role">Owner</div></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🐾</div>
+        <div>
+          <div class="brand-name">JoyVet</div>
+          <div class="brand-sub">Drug Shop</div>
+        </div>
       </div>
-    </div>
-  </aside>
 
-  <main class="main">
-    <header class="topbar">
-      <div>
-        <h1 class="topbar-title">Customer Orders</h1>
-        <p class="topbar-sub">Confirm availability, mark unavailable items, or complete an order</p>
+      <div class="user-panel">
+        <div class="user-avatar" id="userAvatar">??</div>
+        <div>
+          <div id="currentUserName" class="user-name">Not signed in</div>
+          <div id="currentUserRole" class="user-role"></div>
+        </div>
       </div>
-    </header>
 
-    <section class="stat-grid" id="orderStats"></section>
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
+        <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
+        <a class="nav-link active" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+        <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
+        <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+        <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+      </nav>
 
-    <div class="period-toggle" id="statusFilter">
-      <button class="period-btn active" data-status="all" onclick="setStatusFilter('all')">All</button>
-      <button class="period-btn" data-status="pending" onclick="setStatusFilter('pending')">Pending</button>
-      <button class="period-btn" data-status="confirmed" onclick="setStatusFilter('confirmed')">Confirmed</button>
-      <button class="period-btn" data-status="unavailable" onclick="setStatusFilter('unavailable')">Unavailable</button>
-      <button class="period-btn" data-status="fulfilled" onclick="setStatusFilter('fulfilled')">Fulfilled</button>
-    </div>
+      <div class="sidebar-footer">
+        <button id="signOutBtn" class="btn-ghost btn-small" type="button">Sign Out</button>
+        <div class="footer-meta">
+          <div>Designed by Matovu Jovan</div>
+          <div>Support info: Contact Matovu Jovan on 0743901225</div>
+        </div>
+      </div>
+    </aside>
 
-    <section id="ordersList" style="margin-top:16px;"></section>
-  </main>
-</div>
+    <main class="main">
+      <div id="ordersGate" class="panel">
+        <h2>Sign in required</h2>
+        <p class="status-message">Please sign in on the dashboard first, then come back to this page.</p>
+        <a class="btn-primary" href="index.html">Go to sign in</a>
+      </div>
 
-<script src="orders.js"></script>
+      <div id="ordersMain" class="hidden">
+        <header class="topbar">
+          <div>
+            <h1 class="topbar-title">Orders</h1>
+            <p class="topbar-sub">Record customer orders, track their status, and turn fulfilled orders into sales.</p>
+          </div>
+          <div class="topbar-actions">
+            <button id="refreshBtn" class="btn-ghost" type="button">Refresh</button>
+          </div>
+        </header>
+
+        <section class="content-grid inventory-layout">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>New order</h2>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="orderCustomer">Customer name</label>
+                <input id="orderCustomer" type="text">
+              </div>
+              <div class="form-group">
+                <label for="orderPhone">Phone number</label>
+                <input id="orderPhone" type="text">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="orderMethod">Pickup or delivery</label>
+                <select id="orderMethod">
+                  <option value="pickup">Pickup</option>
+                  <option value="delivery">Delivery</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="orderAddress">Delivery address</label>
+                <input id="orderAddress" type="text" placeholder="Only for delivery">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="orderNote">Note</label>
+              <input id="orderNote" type="text" placeholder="Optional">
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Items</h2>
+            </div>
+
+            <div class="form-group">
+              <label for="itemType">Item type</label>
+              <select id="itemType">
+                <option value="product">Product from stock</option>
+                <option value="chick">Chicks or other item (not in stock)</option>
+              </select>
+            </div>
+
+            <div id="productFields">
+              <div class="form-group">
+                <label for="itemProduct">Product</label>
+                <select id="itemProduct"></select>
+              </div>
+            </div>
+
+            <div id="chickFields" class="hidden">
+              <div class="form-group">
+                <label for="itemName">Item name</label>
+                <input id="itemName" type="text" placeholder="e.g. Broiler chicks">
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="itemBreed">Breed</label>
+                  <input id="itemBreed" type="text">
+                </div>
+                <div class="form-group">
+                  <label for="itemNeeded">Needed by</label>
+                  <input id="itemNeeded" type="date">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="itemQty">Quantity</label>
+              <input id="itemQty" type="number" min="1" step="1" value="1">
+            </div>
+
+            <button id="addItemBtn" class="btn-ghost full-width" type="button">Add Item</button>
+            <div id="itemMessage" class="status-message"></div>
+
+            <table class="data-table" style="margin-top: 14px;">
+              <thead>
+                <tr><th>Item</th><th>Qty</th><th>Breed</th><th>Needed by</th><th></th></tr>
+              </thead>
+              <tbody id="cartBody"></tbody>
+            </table>
+
+            <button id="placeOrderBtn" class="btn-primary full-width" type="button" style="margin-top: 14px;">Place Order</button>
+            <div id="orderMessage" class="status-message"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>All orders</h2>
+          </div>
+          <div id="updateMessage" class="status-message"></div>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Placed</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Method</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Change to</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="orders.js"></script>
 </body>
 </html>

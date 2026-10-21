@@ -1,182 +1,152 @@
-function daysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d;
+// JoyVet reports: owner-only summary of sales, stock, staff hours and orders for a date range.
+
+const $ = id => document.getElementById(id);
+
+const paymentLabels = { cash: 'Cash', mtn: 'MTN', airtel: 'Airtel', credit: 'Credit' };
+const orderLabels = { pending: 'Pending', confirmed: 'Confirmed', unavailable: 'Unavailable', fulfilled: 'Fulfilled' };
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
-const salesHistory = [
-  {date: daysAgo(0),  product:"Amoxicillin Inj. 100ml",   amount:70000,  worker:"Nabbosa Justine", payment:"cash"},
-  {date: daysAgo(0),  product:"Broiler Starter Feed 70kg", amount:625000, worker:"Kalema Brian",    payment:"mtn"},
-  {date: daysAgo(0),  product:"Dewormer (Albendazole)",    amount:12000,  worker:"Nabbosa Justine", payment:"cash"},
-  {date: daysAgo(1),  product:"Mineral Lick Supplement",   amount:135000, worker:"Auma Ritah",      payment:"airtel"},
-  {date: daysAgo(1),  product:"Oxytetracycline 20% LA",    amount:84000,  worker:"Kalema Brian",    payment:"cash"},
-  {date: daysAgo(2),  product:"ECF Vaccine (Muguga)",      amount:54000,  worker:"Nabbosa Justine", payment:"credit"},
-  {date: daysAgo(3),  product:"Layers Mash 70kg",          amount:236000, worker:"Auma Ritah",      payment:"mtn"},
-  {date: daysAgo(4),  product:"Amoxicillin Inj. 100ml",    amount:35000,  worker:"Kalema Brian",    payment:"cash"},
-  {date: daysAgo(6),  product:"Dewormer (Albendazole)",    amount:24000,  worker:"Auma Ritah",      payment:"cash"},
-  {date: daysAgo(8),  product:"Broiler Starter Feed 70kg", amount:250000, worker:"Nabbosa Justine", payment:"mtn"},
-  {date: daysAgo(10), product:"Mineral Lick Supplement",   amount:90000,  worker:"Kalema Brian",    payment:"airtel"},
-  {date: daysAgo(14), product:"Oxytetracycline 20% LA",    amount:126000, worker:"Auma Ritah",      payment:"credit"},
-  {date: daysAgo(20), product:"Layers Mash 70kg",          amount:118000, worker:"Nabbosa Justine", payment:"cash"},
-  {date: daysAgo(35), product:"Amoxicillin Inj. 100ml",    amount:105000, worker:"Kalema Brian",    payment:"cash"},
-  {date: daysAgo(60), product:"ECF Vaccine (Muguga)",      amount:36000,  worker:"Auma Ritah",      payment:"mtn"},
-];
-
-let currentPeriod = 'today';
-
-function isSameDay(a, b) { return a.toDateString() === b.toDateString(); }
-function isSameMonth(a, b) { return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }
-function isSameYear(a, b) { return a.getFullYear() === b.getFullYear(); }
-
-function getFilteredSales() {
-  const now = new Date();
-  return salesHistory.filter(sale => {
-    if (currentPeriod === 'today') return isSameDay(sale.date, now);
-    if (currentPeriod === 'month') return isSameMonth(sale.date, now);
-    if (currentPeriod === 'year') return isSameYear(sale.date, now);
-    return true;
-  });
+function formatUGX(n) {
+  return 'UGX ' + Math.round(Number(n || 0)).toLocaleString();
 }
 
-function setPeriod(period) {
-  currentPeriod = period;
-  document.querySelectorAll('.period-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.period === period);
-  });
-  renderReportsAll();
+// Builds YYYY-MM-DD from local date parts, so the day is never shifted by time zones
+function dateString(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function formatUGX(n) { return 'UGX ' + Number(n || 0).toLocaleString(); }
-
-function renderStats() {
-  const sales = getFilteredSales();
-  const total = sales.reduce((sum, s) => sum + s.amount, 0);
-  const count = sales.length;
-  const average = count > 0 ? Math.round(total / count) : 0;
-  const cards = [
-    {icon: '💰', label: 'Total Sales', num: formatUGX(total)},
-    {icon: '🧾', label: 'Transactions', num: count},
-    {icon: '📊', label: 'Average Sale', num: formatUGX(average)},
-  ];
-
-  const reportStats = document.getElementById('reportStats');
-  if (reportStats) {
-    reportStats.innerHTML = cards.map(c => `
-      <div class="stat-card"><div class="icon">${c.icon}</div><div class="num">${c.num}</div><div class="label">${c.label}</div></div>
-    `).join('');
-  }
-}
-
-function renderTopProducts() {
-  const sales = getFilteredSales();
-  const totals = {};
-  sales.forEach(s => {
-    totals[s.product] = (totals[s.product] || 0) + s.amount;
-  });
-
-  const ranked = Object.entries(totals)
-    .map(([name, amount]) => ({name, amount}))
-    .sort((a, b) => b.amount - a.amount);
-
-  const highest = ranked.length > 0 ? ranked[0].amount : 1;
-  const topProducts = document.getElementById('topProducts');
-
-  if (!topProducts) return;
-
-  topProducts.innerHTML = ranked.length === 0
-    ? '<p style="font-size:12.5px; color:var(--muted);">No sales in this period.</p>'
-    : ranked.map(p => `
-        <div class="bar-row">
-          <div class="bar-label"><span class="name">${p.name}</span><span class="value">${formatUGX(p.amount)}</span></div>
-          <div class="bar-track"><div class="bar-fill" style="width:${(p.amount / highest) * 100}%"></div></div>
-        </div>
-      `).join('');
-}
-
-function renderStaffPerformance() {
-  const sales = getFilteredSales();
-  const byWorker = {};
-
-  sales.forEach(s => {
-    if (!byWorker[s.worker]) byWorker[s.worker] = {count: 0, total: 0};
-    byWorker[s.worker].count += 1;
-    byWorker[s.worker].total += s.amount;
-  });
-
-  const ranked = Object.entries(byWorker)
-    .map(([name, data]) => ({name, ...data}))
-    .sort((a, b) => b.total - a.total);
-
-  const staffPerformanceBody = document.getElementById('staffPerformanceBody');
-  if (!staffPerformanceBody) return;
-
-  staffPerformanceBody.innerHTML = ranked.length === 0
-    ? '<tr><td colspan="3" style="color:var(--muted); font-size:12px;">No sales in this period.</td></tr>'
-    : ranked.map(w => `
-        <tr>
-          <td>${w.name}</td>
-          <td>${w.count}</td>
-          <td class="amount">${formatUGX(w.total)}</td>
-        </tr>
-      `).join('');
-}
-
-function renderPaymentBreakdown() {
-  const sales = getFilteredSales();
-  const total = sales.reduce((sum, s) => sum + s.amount, 0);
-  const labels = {cash: '💵 Cash', mtn: '📱 MTN MoMo', airtel: '📱 Airtel Money', credit: '📒 On Account'};
-  const totals = {cash: 0, mtn: 0, airtel: 0, credit: 0};
-  sales.forEach(s => {
-    totals[s.payment] += s.amount;
-  });
-
-  const paymentBreakdown = document.getElementById('paymentBreakdown');
-  if (!paymentBreakdown) return;
-
-  paymentBreakdown.innerHTML = `
-    <div class="payment-breakdown-grid">
-      ${Object.keys(labels).map(key => {
-        const amount = totals[key];
-        const pct = total > 0 ? Math.round((amount / total) * 100) : 0;
-        return `
-          <div class="payment-stat">
-            <div class="method-name">${labels[key]}</div>
-            <div class="method-amount">${formatUGX(amount)}</div>
-            <div class="method-pct">${pct}% of total</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-}
-
-function renderNavBadge() {
-  const navBadge = document.getElementById('navBadge');
-  if (!navBadge) return;
-
+async function api(url, method = 'GET', body = null) {
   try {
-    const raw = localStorage.getItem('joyvet_orders');
-    const orders = raw ? JSON.parse(raw) : [];
-    const pending = Array.isArray(orders) ? orders.filter(o => o.status === 'pending').length : 0;
-    navBadge.textContent = pending > 0 ? String(pending) : '';
-  } catch (error) {
-    navBadge.textContent = '';
+    const res = await fetch(url, { method, body });
+    return await res.json();
+  } catch (err) {
+    console.error('Request failed:', url, err);
+    return { success: false, message: 'Could not reach the server. Please try again.' };
   }
 }
 
-function renderReportsAll() {
-  renderStats();
-  renderTopProducts();
-  renderStaffPerformance();
-  renderPaymentBreakdown();
+function showMsg(text, ok) {
+  const el = $('repMessage');
+  el.textContent = text;
+  el.classList.remove('success', 'error');
+  if (text) el.classList.add(ok ? 'success' : 'error');
+}
+
+function renderReport(r) {
+  $('repSub').textContent = `Figures from ${r.from} to ${r.to}. Stock and staff figures use the period shown.`;
+
+  $('sCount').textContent = r.summary.sale_count;
+  $('sTotal').textContent = formatUGX(r.summary.total);
+
+  $('stockValue').textContent = formatUGX(r.stock.value);
+  $('stockLow').textContent = r.stock.low;
+  $('stockExpiring').textContent = r.stock.expiring;
+  $('stockExpired').textContent = r.stock.expired;
+
+  $('paymentBody').innerHTML = r.payments.map(p => `
+    <tr>
+      <td>${escapeHtml(paymentLabels[p.method] || p.method)}</td>
+      <td>${escapeHtml(p.count)}</td>
+      <td class="amount">${escapeHtml(formatUGX(p.total))}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="3">No sales in this period.</td></tr>';
+
+  $('topBody').innerHTML = r.top.map(t => `
+    <tr>
+      <td>${escapeHtml(t.name)}</td>
+      <td>${escapeHtml(t.qty)}</td>
+      <td class="amount">${escapeHtml(formatUGX(t.amount))}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="3">No products sold in this period.</td></tr>';
+
+  $('hoursBody').innerHTML = r.hours.map(h => `
+    <tr>
+      <td>${escapeHtml(h.name)}</td>
+      <td>${escapeHtml(h.shifts)}</td>
+      <td>${escapeHtml(h.hours.toFixed(2))}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="3">No staff records.</td></tr>';
+
+  $('ordersBody').innerHTML = r.orders.map(o => `
+    <tr>
+      <td>${escapeHtml(orderLabels[o.status] || o.status)}</td>
+      <td>${escapeHtml(o.count)}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="2">No orders in this period.</td></tr>';
+}
+
+async function runReport() {
+  const from = $('fromDate').value;
+  const to = $('toDate').value;
+
+  if (!from || !to) {
+    showMsg('Choose both dates.', false);
+    return;
+  }
+
+  const r = await api(`reports_json.php?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+
+  if (!r.success) {
+    showMsg(r.message || 'Could not load the report.', false);
+    return;
+  }
+
+  showMsg('', true);
+  renderReport(r);
+}
+
+async function signOut() {
+  await api('logout.php', 'POST');
+  window.location.href = 'index.html';
+}
+
+async function start() {
+  const me = await api('me.php');
+
+  if (!me.success) {
+    $('repGate').classList.remove('hidden');
+    $('repMain').classList.add('hidden');
+    $('repDenied').classList.add('hidden');
+    return;
+  }
+
+  $('userAvatar').textContent = me.user.fullName.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  $('currentUserName').textContent = me.user.fullName;
+  $('currentUserRole').textContent = me.user.role;
+
+  if (me.user.role !== 'Owner') {
+    $('repGate').classList.add('hidden');
+    $('repDenied').classList.remove('hidden');
+    $('repMain').classList.add('hidden');
+    return;
+  }
+
+  $('repGate').classList.add('hidden');
+  $('repDenied').classList.add('hidden');
+  $('repMain').classList.remove('hidden');
+
+  // Default to the start of this month through today
+  const now = new Date();
+  $('fromDate').value = dateString(new Date(now.getFullYear(), now.getMonth(), 1));
+  $('toDate').value = dateString(now);
+
+  $('runBtn').addEventListener('click', runReport);
+  $('printBtn').addEventListener('click', () => window.print());
+  $('signOutBtn').addEventListener('click', signOut);
+
+  await runReport();
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    renderReportsAll();
-    renderNavBadge();
-  });
+  document.addEventListener('DOMContentLoaded', start);
 } else {
-  renderReportsAll();
-  renderNavBadge();
+  start();
 }

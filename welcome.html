@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyVet Drug Shop — Animal Health &amp; Supplies</title>
+  <meta name="description" content="JoyVet Drug Shop: genuine animal medicines, vaccines and feeds, with expert advice.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #14233d;
+      --navy-2: #1d3157;
+      --orange: #f0a04b;
+      --orange-dark: #d9822b;
+      --cream: #fff8ef;
+      --ink: #1b2a41;
+      --muted: #5f6f86;
+      --line: #e6ebf2;
+      --green: #15803d;
+      --amber: #b45309;
+      --red: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; color: var(--ink); background: #fff; line-height: 1.55; }
+    h1, h2, h3 { font-family: 'Space Grotesk', Inter, sans-serif; margin: 0; line-height: 1.2; }
+    a { color: inherit; }
+
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      padding: 14px 6vw; background: rgba(20, 35, 61, 0.96); color: #fff;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark { width: 40px; height: 40px; border-radius: 12px; background: #e5533d; display: grid; place-items: center; font-size: 20px; }
+    .logo-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
+    .logo-sub { font-size: 12px; color: rgba(255,255,255,0.65); }
+    .nav { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+    .nav a { text-decoration: none; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); }
+    .nav a:hover { color: var(--orange); }
+    .nav .pill { border: 1px solid rgba(255,255,255,0.3); padding: 7px 12px; border-radius: 999px; font-size: 13px; }
+
+    .hero {
+      padding: 88px 6vw 96px; color: #fff;
+      background: radial-gradient(circle at 85% 20%, rgba(240,160,75,0.35), transparent 40%), linear-gradient(135deg, var(--navy), var(--navy-2));
+    }
+    .hero-inner { max-width: 760px; }
+    .eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--navy); background: var(--orange); padding: 6px 12px; border-radius: 999px; margin-bottom: 18px; }
+    .hero h1 { font-size: clamp(32px, 5vw, 52px); }
+    .hero p { font-size: 18px; color: rgba(255,255,255,0.85); margin: 18px 0 30px; max-width: 620px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn { display: inline-block; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 22px; border-radius: 12px; border: 0; cursor: pointer; }
+    .btn-primary { background: var(--orange); color: var(--navy); }
+    .btn-primary:hover { background: var(--orange-dark); color: #fff; }
+    .btn-outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+    .btn-outline:hover { background: rgba(255,255,255,0.08); }
+
+    .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; padding: 28px 6vw; background: var(--cream); }
+    .trust-item { display: flex; gap: 14px; align-items: flex-start; background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 6px 18px rgba(20,35,61,0.06); }
+    .trust-icon { font-size: 26px; }
+    .trust-item h3 { font-size: 16px; margin-bottom: 4px; }
+    .trust-item p { margin: 0; font-size: 14px; color: var(--muted); }
+
+    section.block { padding: 72px 6vw; }
+    .section-head { max-width: 640px; margin-bottom: 28px; }
+    .section-head h2 { font-size: clamp(26px, 3.5vw, 36px); }
+    .section-head p { color: var(--muted); margin: 10px 0 0; }
+
+    .shop-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .search { flex: 1 1 260px; max-width: 420px; font: inherit; font-size: 15px; padding: 13px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .search:focus { outline: 2px solid var(--orange); border-color: transparent; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+    .chip.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+    .card { display: flex; flex-direction: column; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: 0 8px 24px rgba(20,35,61,0.06); transition: transform .2s ease, box-shadow .2s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(20,35,61,0.12); }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .card-icon { width: 46px; height: 46px; border-radius: 14px; background: var(--cream); display: grid; place-items: center; font-size: 22px; }
+    .category { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .card h3 { font-size: 17px; }
+    .price { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--navy); }
+    .availability { align-self: flex-start; font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; }
+    .avail-in { background: #dcfce7; color: var(--green); }
+    .avail-limited { background: #fef3c7; color: var(--amber); }
+    .avail-out { background: #fee2e2; color: var(--red); }
+    .card-cta { margin-top: auto; text-align: center; text-decoration: none; font-weight: 700; font-size: 14px; padding: 11px; border-radius: 12px; background: var(--cream); color: var(--navy); }
+    .card-cta:hover { background: var(--orange); }
+    .notice { padding: 30px; text-align: center; color: var(--muted); grid-column: 1 / -1; }
+
+    .visit { background: var(--navy); color: #fff; }
+    .visit .section-head p { color: rgba(255,255,255,0.75); }
+    .visit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+    .visit-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 24px; }
+    .visit-card h3 { font-size: 18px; margin-bottom: 10px; color: var(--orange); }
+    .visit-card p { margin: 0; color: rgba(255,255,255,0.85); }
+    .visit-card a { color: #fff; font-weight: 600; }
+
+    footer { padding: 26px 6vw; text-align: center; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
+    footer a { color: var(--navy); font-weight: 600; }
+
+    .call-float { display: none; position: fixed; right: 18px; bottom: 18px; z-index: 30; background: var(--orange); color: var(--navy); text-decoration: none; font-weight: 700; padding: 14px 18px; border-radius: 999px; box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+
+      @media (max-width: 720px) {
+      .site-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .nav { width: 100%; gap: 10px; }
+      .nav a { font-size: 13px; }
+      .hero { padding: 48px 5vw 56px; }
+      .hero h1 { font-size: 30px; }
+      .hero p { font-size: 15px; }
+      .trust, section.block { padding-left: 5vw; padding-right: 5vw; }
+      .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .card { padding: 14px; }
+      .card h3 { font-size: 15px; }
+      .price { font-size: 17px; }
+      .call-float { display: inline-block; }
+    }
+    @media (max-width: 420px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <a class="logo" href="#top">
+      <div class="logo-mark">🐾</div>
+      <div>
+        <div class="logo-name">JoyVet</div>
+        <div class="logo-sub">Drug Shop</div>
+      </div>
+    </a>
+    <nav class="nav">
+      <a href="#shop">Shop</a>
+      <a href="#visit">Visit us</a>
+      <a class="pill" href="my-account.html">My account</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <span class="eyebrow">Animal health you can trust</span>
+      <h1>Healthy animals,<br>happy farmers.</h1>
+      <p>Genuine medicines, vaccines and quality feeds for your animals, with friendly advice from people who understand farming.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#shop">Browse our products</a>
+        <a class="btn btn-outline" href="tel:0701238160">Call us</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust">
+    <div class="trust-item">
+      <div class="trust-icon">✅</div>
+      <div>
+        <h3>Genuine products</h3>
+        <p>Medicines and vaccines bought from trusted suppliers and checked for expiry.</p>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">🩺</div>
+      <div>
+        <h3>Expert advice</h3>
+        <p>Ask us which treatment suits your animal before you buy.</p>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">🚚</div>
+      <div>
+        <h3>Ready when you need it</h3>
+        <p>Create an account to place an order and collect it, or ask about delivery.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="shop">
+    <div class="section-head">
+      <h2>Our products</h2>
+      <p>Search for what you need, or pick a category. Prices are in Uganda shillings.</p>
+    </div>
+
+    <div class="shop-tools">
+      <input id="searchBox" class="search" type="search" placeholder="Search medicines, vaccines, feeds…">
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="grid" id="productGrid">
+      <p class="notice">Loading our products…</p>
+    </div>
+  </section>
+
+  <section class="block visit" id="visit">
+    <div class="section-head">
+      <h2>Visit or contact us</h2>
+      <p>We are happy to help. Call before you come to make sure your product is ready.</p>
+    </div>
+
+    <div class="visit-grid">
+      <div class="visit-card">
+        <h3>Opening hours</h3>
+        <p>Monday to Friday: 8:00 AM – 6:00 PM<br>Saturday: 8:00 AM – 2:00 PM<br>Sunday: Closed</p>
+      </div>
+      <div class="visit-card">
+        <h3>Find us</h3>
+        <p>[Your shop address and town]<br>[Landmark near the shop]</p>
+      </div>
+      <div class="visit-card">
+        <h3>Call or message</h3>
+        <p><a href="0701238160">0701238160</a><br>Orders and questions welcome.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © JoyVet Drug Shop · Designed by Matovu Jovan · <a href="my-account.html">My account</a>
+  </footer>
+
+  <a class="call-float" href="0701238169">📞 Call the shop</a>
+
+  <script>
+    const grid = document.getElementById('productGrid');
+    const chipsBox = document.getElementById('chips');
+    const searchBox = document.getElementById('searchBox');
+
+    let products = [];
+    let activeCategory = 'All';
+
+    const categoryIcons = { medicine: '💊', vaccine: '💉', feed: '🌾', supplement: '🧪' };
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatUGX(n) {
+      return 'UGX ' + Math.round(Number(n || 0)).toLocaleString();
+    }
+
+    function iconFor(category) {
+      const key = String(category || '').toLowerCase();
+      for (const word of Object.keys(categoryIcons)) {
+        if (key.includes(word)) return categoryIcons[word];
+      }
+      return '🐾';
+    }
+
+    // Uses the availability label from public_products.php, never exact stock
+    function availabilityOf(p) {
+      if (p.availability === 'out') return { label: 'Out of stock', cls: 'avail-out' };
+      if (p.availability === 'limited') return { label: 'Limited stock', cls: 'avail-limited' };
+      return { label: 'In stock', cls: 'avail-in' };
+    }
+
+    function buildChips() {
+      const categories = ['All', ...new Set(products.map(p => p.category).filter(Boolean))];
+      chipsBox.innerHTML = categories.map(c => `
+        <button class="chip ${c === activeCategory ? 'active' : ''}" type="button" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('');
+    }
+
+    function render() {
+      const term = searchBox.value.trim().toLowerCase();
+
+      const shown = products.filter(p => {
+        const matchCat = activeCategory === 'All' || p.category === activeCategory;
+        const matchText = !term
+          || String(p.name).toLowerCase().includes(term)
+          || String(p.category || '').toLowerCase().includes(term);
+        return matchCat && matchText;
+      });
+
+      if (shown.length === 0) {
+        grid.innerHTML = '<p class="notice">No products match your search. Try another word, or call us and we will help.</p>';
+        return;
+      }
+
+      grid.innerHTML = shown.map(p => {
+        const avail = availabilityOf(p);
+        return `
+          <article class="card">
+            <div class="card-top">
+              <div class="card-icon">${iconFor(p.category)}</div>
+              <span class="availability ${avail.cls}">${avail.label}</span>
+            </div>
+            <div class="category">${escapeHtml(p.category || 'Product')}</div>
+            <h3>${escapeHtml(p.name)}</h3>
+            <div class="price">${escapeHtml(formatUGX(p.price))}</div>
+            <a class="card-cta" href="my-account.html">Order online</a>
+          </article>`;
+      }).join('');
+    }
+
+    async function loadProducts() {
+      try {
+        const res = await fetch('public_products.php');
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error('Unexpected reply');
+        products = data;
+        buildChips();
+        render();
+      } catch (err) {
+        console.error('Could not load products:', err);
+        grid.innerHTML = '<p class="notice">Our product list is loading slowly. Please refresh the page, or call us for prices.</p>';
+      }
+    }
+
+    chipsBox.addEventListener('click', e => {
+      const btn = e.target.closest('[data-cat]');
+      if (!btn) return;
+      activeCategory = btn.dataset.cat;
+      buildChips();
+      render();
+    });
+
+    searchBox.addEventListener('input', render);
+
+    loadProducts();
+  </script>
+</body>
+</html>

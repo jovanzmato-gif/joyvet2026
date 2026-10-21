@@ -1,124 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JoyVet Drug Shop — Products &amp; Updates</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyVet Drug Shop — Customers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="portal-body">
+<body class="dashboard-body">
 
-<header class="portal-header">
-  <div class="portal-brand">
-    <div class="brand-mark">🐾</div>
-    <div>
-      <div class="portal-brand-name">JoyVet Drug Shop</div>
-      <div class="portal-brand-sub">Animal drugs &amp; feeds — Owned by Yiga Josephat</div>
-    </div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🐾</div>
+        <div>
+          <div class="brand-name">JoyVet</div>
+          <div class="brand-sub">Drug Shop</div>
+        </div>
+      </div>
+
+      <div class="user-panel">
+        <div class="user-avatar" id="userAvatar">??</div>
+        <div>
+          <div id="currentUserName" class="user-name">Not signed in</div>
+          <div id="currentUserRole" class="user-role"></div>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <a class="nav-link" href="index.html"><span class="nav-icon">📊</span>Dashboard</a>
+        <a class="nav-link" href="pos.html"><span class="nav-icon">🧾</span>POS</a>
+        <a class="nav-link" href="orders.html"><span class="nav-icon">🔔</span>Orders <span class="nav-badge" id="navBadge"></span></a>
+        <a class="nav-link" href="sales-history.html"><span class="nav-icon">🕘</span>Sales History</a>
+        <a class="nav-link" href="products.html"><span class="nav-icon">💊</span>Products</a>
+        <a class="nav-link" href="stock-expiry.html"><span class="nav-icon">⏳</span>Stock / Expiry</a>
+        <a class="nav-link" href="attendance.html"><span class="nav-icon">🕒</span>Staff / Attendance</a>
+        <a class="nav-link" href="staff.html"><span class="nav-icon">👥</span>Staff</a>
+        <a class="nav-link" href="suppliers.html"><span class="nav-icon">🚚</span>Suppliers</a>
+        <a class="nav-link active" href="customer-portal.html"><span class="nav-icon">👥</span>Customers</a>
+        <a class="nav-link" href="report.html"><span class="nav-icon">📈</span>Reports</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="signOutBtn" class="btn-ghost btn-small" type="button">Sign Out</button>
+        <div class="footer-meta">
+          <div>Designed by Matovu Jovan</div>
+          <div>Support info: Contact Matovu Jovan on 0743901225</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="custGate" class="panel">
+        <h2>Sign in required</h2>
+        <p class="status-message">Please sign in on the dashboard first, then come back to this page.</p>
+        <a class="btn-primary" href="index.html">Go to sign in</a>
+      </div>
+
+      <div id="custMain" class="hidden">
+        <header class="topbar">
+          <div>
+            <h1 class="topbar-title">Customers</h1>
+            <p class="topbar-sub">Customers from orders (with phone numbers) and from POS sales (by name).</p>
+          </div>
+          <div class="topbar-actions">
+            <button id="refreshBtn" class="btn-ghost" type="button">Refresh</button>
+          </div>
+        </header>
+
+        <section class="stat-grid">
+          <div class="stat-card">
+            <div class="icon">👥</div>
+            <div class="num" id="custCount">0</div>
+            <div class="label">Customers</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">📞</div>
+            <div class="num" id="custWithPhone">0</div>
+            <div class="label">With a phone number</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">💰</div>
+            <div class="num" id="custValue">UGX 0</div>
+            <div class="label">Value from POS sales</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="form-group">
+            <label for="searchBox">Search by name or phone</label>
+            <input id="searchBox" type="text" placeholder="e.g. Nakabiito, 0700">
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Orders</th>
+                  <th>POS sales</th>
+                  <th>Total (POS)</th>
+                  <th>Last activity</th>
+                </tr>
+              </thead>
+              <tbody id="custBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
-  <div class="portal-header-actions">
-    <span class="portal-cart-badge" onclick="scrollToOrder()">🛒 <span id="cartCount">0</span></span>
-    <a href="tel:+256700000000" class="btn-primary">📞 Call</a>
-  </div>
-</header>
 
-<section class="portal-hero">
-  <div class="portal-eyebrow">Trusted by farmers across the district</div>
-  <h1>Quality drugs and feeds,<br>always in stock.</h1>
-  <p>Browse what's available, order online, and we'll confirm before you travel.</p>
-</section>
-
-<main class="portal-main">
-
-  <section class="portal-section">
-    <h2 class="portal-section-title">📢 Latest Updates</h2>
-    <div id="updatesList" class="updates-list"></div>
-  </section>
-
-  <section class="portal-section">
-    <h2 class="portal-section-title">💊 Browse Products</h2>
-    <input type="text" id="portalSearch" class="pos-search" placeholder="Search products..." oninput="renderPortalProducts()">
-    <div class="category-tabs" id="categoryTabs"></div>
-    <div class="portal-product-grid" id="portalProductGrid"></div>
-  </section>
-
-  <section class="portal-section">
-    <h2 class="portal-section-title">🐣 Pre-Order Day-Old Chicks</h2>
-    <div class="panel chicks-panel">
-      <p class="chicks-note">Chicks are supplied to order in batches. Tell us how many and when you need them — we'll confirm availability before delivery day.</p>
-      <div class="chicks-form">
-        <div class="form-group">
-          <label for="chickBreed">Breed</label>
-          <select id="chickBreed">
-            <option>Broiler</option>
-            <option>Layer</option>
-            <option>Kuroiler (dual purpose)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="chickQty">Quantity</label>
-          <input type="number" id="chickQty" min="1" placeholder="e.g. 100">
-        </div>
-        <div class="form-group">
-          <label for="chickDate">Needed by</label>
-          <input type="date" id="chickDate">
-        </div>
-      </div>
-      <button class="btn-ghost full-width" onclick="addChicksToOrder()">+ Add Chicks to Order</button>
-    </div>
-  </section>
-
-  <section class="portal-section" id="orderSection">
-    <h2 class="portal-section-title">🧾 Your Order</h2>
-    <div class="panel">
-      <div id="orderCartItems"></div>
-
-      <div class="form-group" style="margin-top:14px;">
-        <label for="custName">Your name</label>
-        <input type="text" id="custName" placeholder="e.g. Nakabiito Farm">
-      </div>
-      <div class="form-group">
-        <label for="custPhone">Phone number</label>
-        <input type="tel" id="custPhone" placeholder="07XXXXXXXX">
-      </div>
-      <div class="form-group">
-        <label for="custMethod">How will you get it?</label>
-        <select id="custMethod">
-          <option value="pickup">I'll pick up at the shop</option>
-          <option value="delivery">Please deliver</option>
-        </select>
-      </div>
-      <div class="form-group" id="addressGroup" style="display:none;">
-        <label for="custAddress">Delivery address / landmark</label>
-        <input type="text" id="custAddress" placeholder="e.g. Near Kasenge Trading Centre">
-      </div>
-
-      <button class="btn-primary full-width" onclick="placeOrder()">Place Order</button>
-      <p class="portal-error" id="orderError"></p>
-    </div>
-  </section>
-
-  <section class="portal-section">
-    <h2 class="portal-section-title">🔍 Track My Order</h2>
-    <div class="panel">
-      <div class="track-row">
-        <input type="tel" id="trackPhone" placeholder="Enter the phone number you ordered with">
-        <button class="btn-ghost" onclick="trackOrders()">Check Status</button>
-      </div>
-      <div id="trackResults"></div>
-    </div>
-  </section>
-
-</main>
-
-<footer class="portal-footer">
-  <p><strong>JoyVet Drug Shop</strong> — Owned by Yiga Josephat</p>
-  <p>📍 Main Market Road · Open daily 7:00 AM – 8:00 PM</p>
-  <p>📞 0700 000 000</p>
-</footer>
-
-<script src="customer.js"></script>
+  <script src="customers.js"></script>
 </body>
 </html>
